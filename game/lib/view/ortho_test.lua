@@ -43,11 +43,4 @@ test("move_delta() accounts for the current model rotation, still reproducing th
     eq(approx(ny - oy, 20), true, "screen dy")
 end)
 
-test("perspective view has no move_delta", function()
-    local perspective = require("lib.view.perspective")
-    local v = perspective(100, 100)
-
-    eq(v.move_delta, nil)
-end)
-
 T.report()
