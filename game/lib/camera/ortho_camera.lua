@@ -1,5 +1,5 @@
 local mat4   = require("lib.mat4")
-local camera = require("camera.camera")
+local camera = require("lib.camera.camera")
 
 local M = {}
 

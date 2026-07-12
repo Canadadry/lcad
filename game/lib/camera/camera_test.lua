@@ -1,4 +1,4 @@
-local camera = require("camera.camera")
+local camera = require("lib.camera.camera")
 
 local T    = require("lib.t")
 local test = T.test

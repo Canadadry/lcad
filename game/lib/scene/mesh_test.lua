@@ -1,4 +1,4 @@
-local mesh = require("scene.mesh")
+local mesh = require("lib.scene.mesh")
 
 local T    = require("lib.t")
 local test = T.test

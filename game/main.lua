@@ -1,73 +1,39 @@
-local context_menu  = require("lib.context_menu")
-local screen_manager = require("ui.screen_manager")
-local top_menu_bar   = require("ui.top_menu_bar")
+local math = require("lib.math")
+local colors = require("lib.colors")
 
-local state        = require("state")
-local scene_io      = require("scene_io")
-local edit_input    = require("edit_input")
-local texture_input = require("texture_input")
-local screen_draw   = require("screen_draw")
+local screenCanvas
+local canvasWidth = 171
+local canvasHeigh = 128
 
 function love.load()
+    love.graphics.setDefaultFilter("nearest", "nearest")
+    love.graphics.setLineStyle("rough")
     love.graphics.setBackgroundColor(0.1, 0.1, 0.1)
-    state.init()
-    scene_io.bootstrap()
+    screenCanvas = love.graphics.newCanvas(canvasWidth, canvasHeigh)
 end
 
-function love.mousepressed(x, y, button)
-    if y < top_menu_bar.HEIGHT then
-        -- TODO(refactor): have screen_manager.set_current (or context_menu
-        -- itself) close any open menu on screen switch, so this comment is
-        -- unnecessary
-        context_menu.close(state.menu)
-        local screen = top_menu_bar.hit_test(x, y)
-        if screen then
-            screen_manager.set_current(state.screens, screen)
-        end
-        return
+function love.keypressed(key, u)
+    --Debug
+    if key == "space" then --set to whatever key you want to use
+        debug.debug()
     end
-    if screen_manager.get_current(state.screens) ~= screen_manager.Screen.Edition() then
-        texture_input.mousepressed(x, y, button)
-        return
+    if key == "escape" then --set to whatever key you want to use
+        love.event.quit()
     end
-    edit_input.mousepressed(x, y, button)
-end
-
-function love.keypressed(key)
-    if screen_manager.get_current(state.screens) ~= screen_manager.Screen.Edition() then
-        return
-    end
-    edit_input.keypressed(key)
-end
-
-function love.mousereleased(_, _, button)
-    edit_input.mousereleased(button)
-    if button == 1 then
-        state.dragging_camera = nil
-        state.drag_instance   = nil
-        state.drag_camera     = nil
-        state.drag_vertices   = false
-        state.drag_uv_point   = false
-        state.paint_stroke    = nil
-    end
-end
-
-function love.mousemoved(x, y, dx, dy)
-    if screen_manager.get_current(state.screens) ~= screen_manager.Screen.Edition() then
-        texture_input.mousemoved(x, y, dx, dy)
-        return
-    end
-    edit_input.mousemoved(x, y, dx, dy)
-end
-
-function love.wheelmoved(dx, dy)
-    if screen_manager.get_current(state.screens) ~= screen_manager.Screen.Edition() then
-        texture_input.wheelmoved(dx, dy)
-        return
-    end
-    edit_input.wheelmoved(dx, dy)
 end
 
 function love.draw()
-    screen_draw.draw()
+    love.graphics.setCanvas(screenCanvas)
+    love.graphics.clear(colors.DarkGray)
+    love.graphics.setColor(colors.Pink)
+    love.graphics.rectangle("fill", 100, 50, 50, 50)
+    love.graphics.setColor(colors.RealWhite)
+    love.graphics.rectangle("line", 100, 50, 50, 50)
+    love.graphics.rectangle("fill", 50, 20, 25, 25)
+    love.graphics.setCanvas()
+
+    love.graphics.clear(colors.Black)
+    local windowWidth, windowHeight = love.graphics.getDimensions()
+    local x, y, s = math.fit_rect(canvasWidth, canvasHeigh, windowWidth, windowHeight)
+    love.graphics.draw(screenCanvas,x,y,0,s,s)
 end

@@ -1,4 +1,4 @@
-local obj_import = require("scene.obj_import")
+local obj_import = require("lib.scene.obj_import")
 
 local T    = require("lib.t")
 local test = T.test

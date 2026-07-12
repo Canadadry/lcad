@@ -1,6 +1,6 @@
-local ortho_camera = require("camera.ortho_camera")
+local ortho_camera = require("lib.camera.ortho_camera")
 local mat4         = require("lib.mat4")
-local camera       = require("camera.camera")
+local camera       = require("lib.camera.camera")
 
 local T    = require("lib.t")
 local test = T.test
