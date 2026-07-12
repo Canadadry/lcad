@@ -72,6 +72,15 @@ local function viewportAt(cx, cy)
     return views[currentView]:viewport_at(cx, cy, canvasWidth, canvasHeigh)
 end
 
+local function drawCursor()
+    local mx, my = love.mouse.getPosition()
+    local cx, cy = windowToCanvas(mx, my)
+    local vp = viewportAt(cx, cy)
+    local hovering = selection.is_near_selected(sel, vp, meshes[currentIndex].vertices, model, cx, cy,
+        selectionMarkerRadius)
+    cursor.draw(cursorIcon, cx, cy, sel.dragging, hovering)
+end
+
 function love.mousepressed(x, y, button)
     if button ~= 1 then
         return
@@ -130,11 +139,8 @@ function love.draw()
         function(x, y) love.graphics.circle("line", x, y, selectionMarkerRadius) end)
     selection.draw(sel, love.graphics.line)
     love.graphics.setColor(colors.RealWhite)
-    local mx, my = love.mouse.getPosition()
-    local cx, cy = windowToCanvas(mx, my)
-    cursor.draw(cursorIcon, cx, cy, sel.dragging)
+    drawCursor()
     love.graphics.setCanvas()
-
     love.graphics.clear(colors.Black)
     local windowWidth, windowHeight = love.graphics.getDimensions()
     local x, y, s = math.fit_rect(canvasWidth, canvasHeigh, windowWidth, windowHeight)

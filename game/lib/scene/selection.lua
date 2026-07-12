@@ -55,6 +55,19 @@ function M.end_drag(sel, vertices, model)
     sel.selected = selected
 end
 
+function M.is_near_selected(sel, vp, vertices, model, cx, cy, radius)
+    local mvp = vp.view:mvp(model)
+    local x, y = cx - vp.ox, cy - vp.oy
+    for _, i in ipairs(sel.selected) do
+        local vx, vy = mat4.project(mvp, vertices[i], vp.w, vp.h)
+        local dx, dy = vx - x, vy - y
+        if dx * dx + dy * dy <= radius * radius then
+            return true
+        end
+    end
+    return false
+end
+
 function M.draw(sel, drawLine)
     if not sel.dragging then
         return

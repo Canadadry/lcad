@@ -174,4 +174,39 @@ test("update_drag() clamps the current point into [0,w]x[0,h] when bounds are gi
     eq(sel.current.y, 150)
 end)
 
+test("is_near_selected() returns true when the point is within radius of a selected vertex's projection", function()
+    local sel = selection.new()
+    local vp = { view = view_with_mvp(mat4.identity()), ox = 0, oy = 0, w = 100, h = 100 }
+    local vertices = { { -0.5, 0, 0 } } -- projects to (25, 50)
+    sel.selected = { 1 }
+
+    eq(selection.is_near_selected(sel, vp, vertices, nil, 27, 50, 3), true)
+end)
+
+test("is_near_selected() returns false when the point is outside radius of every selected vertex's projection", function()
+    local sel = selection.new()
+    local vp = { view = view_with_mvp(mat4.identity()), ox = 0, oy = 0, w = 100, h = 100 }
+    local vertices = { { -0.5, 0, 0 } } -- projects to (25, 50)
+    sel.selected = { 1 }
+
+    eq(selection.is_near_selected(sel, vp, vertices, nil, 40, 50, 3), false)
+end)
+
+test("is_near_selected() returns false when nothing is selected", function()
+    local sel = selection.new()
+    local vp = { view = view_with_mvp(mat4.identity()), ox = 0, oy = 0, w = 100, h = 100 }
+    local vertices = { { -0.5, 0, 0 } } -- projects to (25, 50)
+
+    eq(selection.is_near_selected(sel, vp, vertices, nil, 25, 50, 3), false)
+end)
+
+test("is_near_selected() offsets the point by the viewport's screen offset before comparing", function()
+    local sel = selection.new()
+    local vp = { view = view_with_mvp(mat4.identity()), ox = 200, oy = 100, w = 100, h = 100 }
+    local vertices = { { -0.5, 0, 0 } } -- projects to (25, 50) in viewport-local space
+    sel.selected = { 1 }
+
+    eq(selection.is_near_selected(sel, vp, vertices, nil, 227, 150, 3), true)
+end)
+
 T.report()

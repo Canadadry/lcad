@@ -15,9 +15,18 @@ function M.load(path, frameSize)
     }
 end
 
-function M.draw(cursor, x, y, dragging)
-    local quad = dragging and cursor.quads.grabbing or cursor.quads.arrow
-    love.graphics.draw(cursor.image, quad, x, y)
+function M.quad_for(cursor, dragging, hovering)
+    if dragging then
+        return cursor.quads.grabbing
+    end
+    if hovering then
+        return cursor.quads.grab
+    end
+    return cursor.quads.arrow
+end
+
+function M.draw(cursor, x, y, dragging, hovering)
+    love.graphics.draw(cursor.image, M.quad_for(cursor, dragging, hovering), x, y)
 end
 
 return M
