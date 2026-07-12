@@ -24,22 +24,22 @@ local currentIndex = 1
 local model = mat4.identity()
 local rotation = 0
 local rotationSpeed = _G.math.rad(45)
-local rotate = true
+local rotate = false
 
-local currentView = 1
 local sel = selection.new()
 
 
 local views = {}
 for i, factory in ipairs({
-    perspective,
     ortho.x,
     ortho.y,
     ortho.z,
+    perspective,
 }) do
     views[i] = factory(canvasWidth, canvasHeigh)
 end
 views[#views + 1] = four_view.new(views[1], views[2], views[3], views[4])
+local currentView = #views
 
 
 function love.load()
