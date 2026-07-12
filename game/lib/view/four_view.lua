@@ -23,6 +23,23 @@ function M.draw(fv, sceneMesh, model, w, h, setColor, drawLine)
     drawLine(0, hh, w, hh)
 end
 
+function M.quadrants(fv, w, h)
+    local hw, hh = w / 2, h / 2
+    local qs = {}
+    for i, v in ipairs(fv.views) do
+        qs[i] = { view = v, ox = offsets[i].ox * hw, oy = offsets[i].oy * hh, w = hw, h = hh }
+    end
+    return qs
+end
+
+function M.locate(fv, x, y, w, h)
+    local hw, hh = w / 2, h / 2
+    local qx, qy = x < hw and 0 or 1, y < hh and 0 or 1
+    local i = 1 + qx + 2 * qy
+    local q = M.quadrants(fv, w, h)[i]
+    return i, q.view, q.ox, q.oy, q.w, q.h
+end
+
 function M.new(topLeft, topRight, bottomLeft, bottomRight)
     return {
         views = { topLeft, topRight, bottomLeft, bottomRight },

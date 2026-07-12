@@ -93,4 +93,54 @@ test("draw() splits the quadrants with a white cross line after drawing the view
     eq(horizontal[1], 0);  eq(horizontal[2], hh); eq(horizontal[3], w);  eq(horizontal[4], hh)
 end)
 
+test("locate() resolves the quadrant, its view and its screen offset for a point in the top-left quadrant", function()
+    local tl = view.new("tl", mat4.identity(), mat4.identity())
+    local tr = view.new("tr", mat4.identity(), mat4.identity())
+    local bl = view.new("bl", mat4.identity(), mat4.identity())
+    local br = view.new("br", mat4.identity(), mat4.identity())
+    local fv = four_view.new(tl, tr, bl, br)
+
+    local i, v, ox, oy, qw, qh = four_view.locate(fv, 10, 10, 100, 80)
+
+    eq(i, 1)
+    eq(v, tl)
+    eq(ox, 0)
+    eq(oy, 0)
+    eq(qw, 50)
+    eq(qh, 40)
+end)
+
+test("locate() resolves the bottom-right quadrant for a point past the midpoint on both axes", function()
+    local tl = view.new("tl", mat4.identity(), mat4.identity())
+    local tr = view.new("tr", mat4.identity(), mat4.identity())
+    local bl = view.new("bl", mat4.identity(), mat4.identity())
+    local br = view.new("br", mat4.identity(), mat4.identity())
+    local fv = four_view.new(tl, tr, bl, br)
+
+    local i, v, ox, oy, qw, qh = four_view.locate(fv, 90, 70, 100, 80)
+
+    eq(i, 4)
+    eq(v, br)
+    eq(ox, 50)
+    eq(oy, 40)
+    eq(qw, 50)
+    eq(qh, 40)
+end)
+
+test("quadrants() returns the 4 views paired with their screen offset and size, in tl/tr/bl/br order", function()
+    local tl = view.new("tl", mat4.identity(), mat4.identity())
+    local tr = view.new("tr", mat4.identity(), mat4.identity())
+    local bl = view.new("bl", mat4.identity(), mat4.identity())
+    local br = view.new("br", mat4.identity(), mat4.identity())
+    local fv = four_view.new(tl, tr, bl, br)
+
+    local qs = four_view.quadrants(fv, 100, 80)
+
+    eq(#qs, 4)
+    eq(qs[1].view, tl); eq(qs[1].ox, 0);  eq(qs[1].oy, 0);  eq(qs[1].w, 50); eq(qs[1].h, 40)
+    eq(qs[2].view, tr); eq(qs[2].ox, 50); eq(qs[2].oy, 0);  eq(qs[2].w, 50); eq(qs[2].h, 40)
+    eq(qs[3].view, bl); eq(qs[3].ox, 0);  eq(qs[3].oy, 40); eq(qs[3].w, 50); eq(qs[3].h, 40)
+    eq(qs[4].view, br); eq(qs[4].ox, 50); eq(qs[4].oy, 40); eq(qs[4].w, 50); eq(qs[4].h, 40)
+end)
+
 T.report()
