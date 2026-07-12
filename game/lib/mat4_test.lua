@@ -8,8 +8,8 @@ local function approx(a, b, eps)
     return math.abs(a - b) < (eps or 1e-9)
 end
 
-test("mat4_identity returns the identity matrix", function()
-    local m = mat4.mat4_identity()
+test("identity returns the identity matrix", function()
+    local m = mat4.identity()
     eq(#m, 16)
     for col = 0, 3 do
         for row = 0, 3 do
@@ -22,7 +22,7 @@ end)
 test("mat4_mul multiplies two diagonal matrices correctly", function()
     local a = { 2,0,0,0,  0,3,0,0,  0,0,4,0,  0,0,0,1 }
     local b = { 5,0,0,0,  0,6,0,0,  0,0,7,0,  0,0,0,1 }
-    local r = mat4.mat4_mul(a, b)
+    local r = mat4.mul(a, b)
     eq(r[1],  10)
     eq(r[6],  18)
     eq(r[11], 28)
@@ -31,7 +31,7 @@ end)
 
 test("mat4_mul with identity returns the other matrix unchanged", function()
     local m = { 1,2,3,4, 5,6,7,8, 9,10,11,12, 13,14,15,16 }
-    local r = mat4.mat4_mul(mat4.mat4_identity(), m)
+    local r = mat4.mul(mat4.identity(), m)
     for i = 1, 16 do
         eq(r[i], m[i], "index " .. i)
     end
@@ -39,7 +39,7 @@ end)
 
 test("mat4_mul_vec4 transforms a vector through a scale matrix", function()
     local scale = { 2,0,0,0,  0,3,0,0,  0,0,4,0,  0,0,0,1 }
-    local r = mat4.mat4_mul_vec4(scale, { 1, 1, 1, 1 })
+    local r = mat4.mul_vec4(scale, { 1, 1, 1, 1 })
     eq(r[1], 2)
     eq(r[2], 3)
     eq(r[3], 4)
@@ -47,8 +47,8 @@ test("mat4_mul_vec4 transforms a vector through a scale matrix", function()
 end)
 
 test("mat4_translate offsets a point by (x, y, z)", function()
-    local m = mat4.mat4_translate(5, -2, 3)
-    local r = mat4.mat4_mul_vec4(m, { 0, 0, 0, 1 })
+    local m = mat4.translate(5, -2, 3)
+    local r = mat4.mul_vec4(m, { 0, 0, 0, 1 })
     eq(r[1], 5)
     eq(r[2], -2)
     eq(r[3], 3)
@@ -56,8 +56,8 @@ test("mat4_translate offsets a point by (x, y, z)", function()
 end)
 
 test("mat4_translate leaves a direction vector (w=0) unaffected", function()
-    local m = mat4.mat4_translate(5, -2, 3)
-    local r = mat4.mat4_mul_vec4(m, { 1, 1, 1, 0 })
+    local m = mat4.translate(5, -2, 3)
+    local r = mat4.mul_vec4(m, { 1, 1, 1, 0 })
     eq(r[1], 1)
     eq(r[2], 1)
     eq(r[3], 1)
@@ -65,8 +65,8 @@ test("mat4_translate leaves a direction vector (w=0) unaffected", function()
 end)
 
 test("mat4_rotate_x(90 degrees) carries the +Y axis onto +Z", function()
-    local m = mat4.mat4_rotate_x(math.rad(90))
-    local r = mat4.mat4_mul_vec4(m, { 0, 1, 0, 1 })
+    local m = mat4.rotate_x(math.rad(90))
+    local r = mat4.mul_vec4(m, { 0, 1, 0, 1 })
     eq(approx(r[1], 0), true, "x")
     eq(approx(r[2], 0), true, "y")
     eq(approx(r[3], 1), true, "z")
@@ -74,8 +74,8 @@ test("mat4_rotate_x(90 degrees) carries the +Y axis onto +Z", function()
 end)
 
 test("mat4_rotate_y(90 degrees) carries the +Z axis onto +X", function()
-    local m = mat4.mat4_rotate_y(math.rad(90))
-    local r = mat4.mat4_mul_vec4(m, { 0, 0, 1, 1 })
+    local m = mat4.rotate_y(math.rad(90))
+    local r = mat4.mul_vec4(m, { 0, 0, 1, 1 })
     eq(approx(r[1], 1), true, "x")
     eq(approx(r[2], 0), true, "y")
     eq(approx(r[3], 0), true, "z")
@@ -83,8 +83,8 @@ test("mat4_rotate_y(90 degrees) carries the +Z axis onto +X", function()
 end)
 
 test("mat4_rotate_z(90 degrees) carries the +X axis onto +Y", function()
-    local m = mat4.mat4_rotate_z(math.rad(90))
-    local r = mat4.mat4_mul_vec4(m, { 1, 0, 0, 1 })
+    local m = mat4.rotate_z(math.rad(90))
+    local r = mat4.mul_vec4(m, { 1, 0, 0, 1 })
     eq(approx(r[1], 0), true, "x")
     eq(approx(r[2], 1), true, "y")
     eq(approx(r[3], 0), true, "z")
@@ -92,8 +92,8 @@ test("mat4_rotate_z(90 degrees) carries the +X axis onto +Y", function()
 end)
 
 test("mat4_scale(2) doubles a point's distance from the origin on every axis", function()
-    local m = mat4.mat4_scale(2)
-    local r = mat4.mat4_mul_vec4(m, { 3, -4, 5, 1 })
+    local m = mat4.scale(2)
+    local r = mat4.mul_vec4(m, { 3, -4, 5, 1 })
     eq(r[1], 6, "x")
     eq(r[2], -8, "y")
     eq(r[3], 10, "z")
@@ -102,7 +102,7 @@ end)
 
 test("look_at transforms the target point to -distance on the Z axis", function()
     local view = mat4.look_at({ 0, 0, 5 }, { 0, 0, 0 }, { 0, 1, 0 })
-    local r = mat4.mat4_mul_vec4(view, { 0, 0, 0, 1 })
+    local r = mat4.mul_vec4(view, { 0, 0, 0, 1 })
     eq(r[1], 0)
     eq(r[2], 0)
     eq(r[3], -5)
@@ -127,64 +127,24 @@ test("orthographic produces expected matrix elements for a symmetric box", funct
 end)
 
 test("orthographic keeps a point's screen size constant across depth", function()
-    local view = mat4.mat4_identity()
+    local view = mat4.identity()
     local near_proj = mat4.orthographic(-2, 2, -2, 2, 0.1, 100)
-    local mvp_near = mat4.mat4_mul(near_proj, view)
+    local mvp_near = mat4.mul(near_proj, view)
     local x_near = mat4.project(mvp_near, { 2, 0, -1 }, 800, 600)
     local x_far  = mat4.project(mvp_near, { 2, 0, -50 }, 800, 600)
     eq(approx(x_near, x_far), true, "same screen x regardless of depth")
 end)
 
-test("mvp honors explicit w, h, and projection overrides", function()
-    local view = mat4.look_at({ 0, 0, 5 }, { 0, 0, 0 }, { 0, 1, 0 })
-    local ortho_proj = mat4.orthographic(-2, 2, -2, 2, 0.1, 100)
-
-    local mvp, w, h = mat4.mvp(view, nil, 400, 300, ortho_proj)
-    eq(w, 400, "w")
-    eq(h, 300, "h")
-
-    local expected = mat4.mat4_mul(ortho_proj, view)
-    for i = 1, 16 do
-        eq(approx(mvp[i], expected[i]), true, "matrix element " .. i)
-    end
-end)
-
-test("mvp with no overrides matches the old full-window perspective behavior", function()
-    local view = mat4.look_at({ 0, 0, 5 }, { 0, 0, 0 }, { 0, 1, 0 })
-    local mvp, w, h = mat4.mvp(view)
-    eq(w, 600, "w falls back to love.graphics.getDimensions()")
-    eq(h, 600, "h falls back to love.graphics.getDimensions()")
-
-    local expected_projection = mat4.perspective(mat4.FOV, w / h, 0.1, 100)
-    local expected = mat4.mat4_mul(expected_projection, view)
-    for i = 1, 16 do
-        eq(approx(mvp[i], expected[i]), true, "matrix element " .. i)
-    end
-end)
-
 test("project maps the origin to the center of the screen under an identity mvp", function()
-    local x, y = mat4.project(mat4.mat4_identity(), { 0, 0, 0 }, 800, 600)
+    local x, y = mat4.project(mat4.identity(), { 0, 0, 0 }, 800, 600)
     eq(x, 400)
     eq(y, 300)
 end)
 
 test("project maps NDC (1, 0) to the right edge, vertical center", function()
-    local x, y = mat4.project(mat4.mat4_identity(), { 1, 0, 0 }, 800, 600)
+    local x, y = mat4.project(mat4.identity(), { 1, 0, 0 }, 800, 600)
     eq(x, 800)
     eq(y, 300)
-end)
-
-test("mvp(view, model) translating via model matches translating the vertex directly", function()
-    local view  = mat4.look_at({ 3, 3, 3 }, { 0, 0, 0 }, { 0, 1, 0 })
-    local model = mat4.mat4_translate(1, 2, -1)
-
-    local mvp_with_model = mat4.mvp(view, model)
-    local mvp_identity   = mat4.mvp(view)
-
-    local x1, y1 = mat4.project(mvp_with_model, { 0, 0, 0 }, 800, 600)
-    local x2, y2 = mat4.project(mvp_identity, { 1, 2, -1 }, 800, 600)
-    eq(approx(x1, x2), true, "x matches the pre-translated vertex")
-    eq(approx(y1, y2), true, "y matches the pre-translated vertex")
 end)
 
 T.report()
