@@ -93,6 +93,22 @@ test("draw() splits the quadrants with a white cross line after drawing the view
     eq(horizontal[1], 0);  eq(horizontal[2], hh); eq(horizontal[3], w);  eq(horizontal[4], hh)
 end)
 
+test("viewport_at() resolves to the quadrant, its view and its screen offset for a point in the top-left quadrant", function()
+    local tl = view.new("tl", mat4.identity(), mat4.identity())
+    local tr = view.new("tr", mat4.identity(), mat4.identity())
+    local bl = view.new("bl", mat4.identity(), mat4.identity())
+    local br = view.new("br", mat4.identity(), mat4.identity())
+    local fv = four_view.new(tl, tr, bl, br)
+
+    local vp = four_view.viewport_at(fv, 10, 10, 100, 80)
+
+    eq(vp.view, tl)
+    eq(vp.ox, 0)
+    eq(vp.oy, 0)
+    eq(vp.w, 50)
+    eq(vp.h, 40)
+end)
+
 test("locate() resolves the quadrant, its view and its screen offset for a point in the top-left quadrant", function()
     local tl = view.new("tl", mat4.identity(), mat4.identity())
     local tr = view.new("tr", mat4.identity(), mat4.identity())

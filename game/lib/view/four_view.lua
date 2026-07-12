@@ -40,10 +40,17 @@ function M.locate(fv, x, y, w, h)
     return i, q.view, q.ox, q.oy, q.w, q.h
 end
 
+function M.viewport_at(fv, x, y, w, h)
+    local _, qv, ox, oy, qw, qh = M.locate(fv, x, y, w, h)
+    return { view = qv, ox = ox, oy = oy, w = qw, h = qh }
+end
+
 function M.new(topLeft, topRight, bottomLeft, bottomRight)
     return {
         views = { topLeft, topRight, bottomLeft, bottomRight },
         draw = M.draw,
+        viewport_at = M.viewport_at,
+        viewports = M.quadrants,
     }
 end
 

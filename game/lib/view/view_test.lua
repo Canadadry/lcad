@@ -31,6 +31,31 @@ test("mvp() composes projection * view * model", function()
     eq_mat(mvp, mat4.mul(mat4.scale(2), mat4.mul(mat4.translate(1, 0, 0), mat4.identity())))
 end)
 
+test("viewport_at() resolves to itself covering the full canvas, regardless of the point", function()
+    local v = view.new("test", mat4.identity(), mat4.identity())
+
+    local vp = view.viewport_at(v, 30, 40, 100, 80)
+
+    eq(vp.view, v)
+    eq(vp.ox, 0)
+    eq(vp.oy, 0)
+    eq(vp.w, 100)
+    eq(vp.h, 80)
+end)
+
+test("viewports() returns a single viewport covering the full canvas", function()
+    local v = view.new("test", mat4.identity(), mat4.identity())
+
+    local vps = view.viewports(v, 100, 80)
+
+    eq(#vps, 1)
+    eq(vps[1].view, v)
+    eq(vps[1].ox, 0)
+    eq(vps[1].oy, 0)
+    eq(vps[1].w, 100)
+    eq(vps[1].h, 80)
+end)
+
 test("draw() renders the mesh in white then the gizmo axes in their own colors, resetting to white after each", function()
     local v = view.new("test", mat4.identity(), mat4.identity())
     local m = mesh.new(

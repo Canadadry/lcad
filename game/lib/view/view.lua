@@ -22,6 +22,14 @@ function M.draw(v, sceneMesh, model, w, h, setColor, drawLine)
     setColor(colors.RealWhite)
 end
 
+function M.viewport_at(v, cx, cy, w, h)
+    return { view = v, ox = 0, oy = 0, w = w, h = h }
+end
+
+function M.viewports(v, w, h)
+    return { { view = v, ox = 0, oy = 0, w = w, h = h } }
+end
+
 function M.new(name, view, projection)
     return {
         name = name,
@@ -29,6 +37,8 @@ function M.new(name, view, projection)
         projection = projection,
         mvp = M.mvp,
         draw = M.draw,
+        viewport_at = M.viewport_at,
+        viewports = M.viewports,
     }
 end
 

@@ -3,15 +3,9 @@ local colors = require("lib.colors")
 local mat4 = require("lib.mat4")
 local obj_import = require("lib.scene.obj_import")
 local selection = require("lib.scene.selection")
-
 local ortho = require("lib.view.ortho")
 local four_view = require("lib.view.four_view")
-local viewFactories = {
-    require("lib.view.perspective"),
-    ortho.x,
-    ortho.y,
-    ortho.z,
-}
+local perspective = require("lib.view.perspective")
 
 local assetPaths = {
     "assets/cube.obj",
@@ -31,11 +25,22 @@ local rotation = 0
 local rotationSpeed = _G.math.rad(45)
 local rotate = true
 
-local views = {}
 local currentView = 1
 local sel = selection.new()
--- viewport a drag is locked to, valid only while sel.dragging is true
 local dragViewport = nil
+
+
+local views = {}
+for i, factory in ipairs({
+    perspective,
+    ortho.x,
+    ortho.y,
+    ortho.z,
+}) do
+    views[i] = factory(canvasWidth, canvasHeigh)
+end
+views[#views + 1] = four_view.new(views[1], views[2], views[3], views[4])
+
 
 function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")
@@ -45,10 +50,6 @@ function love.load()
     for i, path in ipairs(assetPaths) do
         meshes[i] = obj_import.load(path)
     end
-    for i, factory in ipairs(viewFactories) do
-        views[i] = factory(canvasWidth, canvasHeigh)
-    end
-    views[#views + 1] = four_view.new(views[1], views[2], views[3], views[4])
 end
 
 function love.update(dt)
@@ -64,18 +65,8 @@ local function windowToCanvas(x, y)
     return (x - ox) / s, (y - oy) / s
 end
 
--- resolves which view a canvas point belongs to: the view itself when in
--- single-view mode, or whichever four_view quadrant contains the point
 local function viewportAt(cx, cy)
-    local v = views[currentView]
-    if v.mvp then
-        return { view = v, ox = 0, oy = 0, w = canvasWidth, h = canvasHeigh }
-    end
-    if v.views then
-        local _, qv, ox, oy, qw, qh = four_view.locate(v, cx, cy, canvasWidth, canvasHeigh)
-        return { view = qv, ox = ox, oy = oy, w = qw, h = qh }
-    end
-    return nil
+    return views[currentView]:viewport_at(cx, cy, canvasWidth, canvasHeigh)
 end
 
 function love.mousepressed(x, y, button)
@@ -84,11 +75,8 @@ function love.mousepressed(x, y, button)
     end
     local cx, cy = windowToCanvas(x, y)
     local vp = viewportAt(cx, cy)
-    if not vp then
-        return
-    end
     dragViewport = vp
-    selection.begin_drag(sel, cx - vp.ox, cy - vp.oy, vp.w, vp.h)
+    selection.begin_drag(sel, vp, cx, cy)
 end
 
 function love.mousemoved(x, y)
@@ -96,14 +84,14 @@ function love.mousemoved(x, y)
         return
     end
     local cx, cy = windowToCanvas(x, y)
-    selection.update_drag(sel, cx - dragViewport.ox, cy - dragViewport.oy, dragViewport.w, dragViewport.h)
+    selection.update_drag(sel, dragViewport, cx, cy)
 end
 
 function love.mousereleased(x, y, button)
     if button ~= 1 or not sel.dragging or not dragViewport then
         return
     end
-    selection.end_drag(sel, meshes[currentIndex].vertices, dragViewport.view:mvp(model), dragViewport.w, dragViewport.h)
+    selection.end_drag(sel, dragViewport, meshes[currentIndex].vertices, model)
 end
 
 function love.keypressed(key, u)
@@ -136,19 +124,16 @@ function love.draw()
     v:draw(meshes[currentIndex], model, canvasWidth, canvasHeigh, love.graphics.setColor, love.graphics.line)
 
     local function drawSelectionAt(vp)
-        local ox, oy = vp.ox, vp.oy
-        selection.draw(sel, meshes[currentIndex].vertices, vp.view:mvp(model), vp.w, vp.h,
-            function(x1, y1, x2, y2) love.graphics.line(x1 + ox, y1 + oy, x2 + ox, y2 + oy) end,
-            function(x, y, r) love.graphics.circle("line", x + ox, y + oy, r) end)
+        selection.draw(sel, vp, meshes[currentIndex].vertices, model,
+            love.graphics.line,
+            function(x, y, r) love.graphics.circle("line", x, y, r) end)
     end
 
     love.graphics.setColor(colors.Yellow)
     if sel.dragging and dragViewport then
         drawSelectionAt(dragViewport)
-    elseif v.mvp then
-        drawSelectionAt({ view = v, ox = 0, oy = 0, w = canvasWidth, h = canvasHeigh })
-    elseif v.views then
-        for _, q in ipairs(four_view.quadrants(v, canvasWidth, canvasHeigh)) do
+    else
+        for _, q in ipairs(v:viewports(canvasWidth, canvasHeigh)) do
             drawSelectionAt(q)
         end
     end
