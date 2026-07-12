@@ -19,6 +19,13 @@ function M.draw(mesh,mvp,w,h,drawLine)
     end
 end
 
+function M.draw_selected(mesh, selected, mvp, w, h, drawCircle)
+    for _, i in ipairs(selected) do
+        local x, y = mat4.project(mvp, mesh.vertices[i], w, h)
+        drawCircle(x, y)
+    end
+end
+
 -- TODO(refactor): thread the face index through hit-test/highlight callers so this
 -- can index mesh.face_uvs directly instead of scanning by identity, so this comment
 -- is unnecessary

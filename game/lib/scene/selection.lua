@@ -25,17 +25,20 @@ end
 function M.begin_drag(sel, vp, cx, cy)
     local x, y = clamp_point(cx - vp.ox, cy - vp.oy, vp.w, vp.h)
     sel.dragging = true
+    sel.viewport = vp
     sel.start = { x = x, y = y }
     sel.current = { x = x, y = y }
 end
 
-function M.update_drag(sel, vp, cx, cy)
+function M.update_drag(sel, cx, cy)
+    local vp = sel.viewport
     local x, y = clamp_point(cx - vp.ox, cy - vp.oy, vp.w, vp.h)
     sel.current.x = x
     sel.current.y = y
 end
 
-function M.end_drag(sel, vp, vertices, model)
+function M.end_drag(sel, vertices, model)
+    local vp = sel.viewport
     local mvp = vp.view:mvp(model)
     local minX, maxX = math.min(sel.start.x, sel.current.x), math.max(sel.start.x, sel.current.x)
     local minY, maxY = math.min(sel.start.y, sel.current.y), math.max(sel.start.y, sel.current.y)
@@ -52,25 +55,18 @@ function M.end_drag(sel, vp, vertices, model)
     sel.selected = selected
 end
 
-local markerRadius = 3
-
-function M.draw(sel, vp, vertices, model, drawLine, drawCircle)
-    local ox, oy = vp.ox, vp.oy
-
-    if sel.dragging then
-        local sx, sy, cx, cy = sel.start.x + ox, sel.start.y + oy, sel.current.x + ox, sel.current.y + oy
-        drawLine(sx, sy, cx, sy)
-        drawLine(cx, sy, cx, cy)
-        drawLine(cx, cy, sx, cy)
-        drawLine(sx, cy, sx, sy)
+function M.draw(sel, drawLine)
+    if not sel.dragging then
         return
     end
 
-    local mvp = vp.view:mvp(model)
-    for _, i in ipairs(sel.selected) do
-        local x, y = mat4.project(mvp, vertices[i], vp.w, vp.h)
-        drawCircle(x + ox, y + oy, markerRadius)
-    end
+    local ox, oy = sel.viewport.ox, sel.viewport.oy
+    local sx, sy = sel.start.x + ox, sel.start.y + oy
+    local cx, cy = sel.current.x + ox, sel.current.y + oy
+    drawLine(sx, sy, cx, sy)
+    drawLine(cx, sy, cx, cy)
+    drawLine(cx, cy, sx, cy)
+    drawLine(sx, cy, sx, sy)
 end
 
 return M

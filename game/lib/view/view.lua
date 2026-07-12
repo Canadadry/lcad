@@ -22,12 +22,12 @@ function M.draw(v, sceneMesh, model, w, h, setColor, drawLine)
     setColor(colors.RealWhite)
 end
 
-function M.viewport_at(v, cx, cy, w, h)
-    return { view = v, ox = 0, oy = 0, w = w, h = h }
+function M.draw_selected(v, sceneMesh, selected, model, w, h, drawCircle)
+    mesh.draw_selected(sceneMesh, selected, M.mvp(v, model), w, h, drawCircle)
 end
 
-function M.viewports(v, w, h)
-    return { { view = v, ox = 0, oy = 0, w = w, h = h } }
+function M.viewport_at(v, cx, cy, w, h)
+    return { view = v, ox = 0, oy = 0, w = w, h = h }
 end
 
 function M.new(name, view, projection)
@@ -37,8 +37,8 @@ function M.new(name, view, projection)
         projection = projection,
         mvp = M.mvp,
         draw = M.draw,
+        draw_selected = M.draw_selected,
         viewport_at = M.viewport_at,
-        viewports = M.viewports,
     }
 end
 

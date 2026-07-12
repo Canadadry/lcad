@@ -18,6 +18,7 @@ local assetPaths = {
 local screenCanvas
 local canvasWidth = 171
 local canvasHeigh = 128
+local selectionMarkerRadius = 3
 local meshes = {}
 local currentIndex = 1
 local model = mat4.identity()
@@ -27,7 +28,6 @@ local rotate = true
 
 local currentView = 1
 local sel = selection.new()
-local dragViewport = nil
 
 
 local views = {}
@@ -75,23 +75,22 @@ function love.mousepressed(x, y, button)
     end
     local cx, cy = windowToCanvas(x, y)
     local vp = viewportAt(cx, cy)
-    dragViewport = vp
     selection.begin_drag(sel, vp, cx, cy)
 end
 
 function love.mousemoved(x, y)
-    if not sel.dragging or not dragViewport then
+    if not sel.dragging then
         return
     end
     local cx, cy = windowToCanvas(x, y)
-    selection.update_drag(sel, dragViewport, cx, cy)
+    selection.update_drag(sel, cx, cy)
 end
 
 function love.mousereleased(x, y, button)
-    if button ~= 1 or not sel.dragging or not dragViewport then
+    if button ~= 1 or not sel.dragging then
         return
     end
-    selection.end_drag(sel, dragViewport, meshes[currentIndex].vertices, model)
+    selection.end_drag(sel, meshes[currentIndex].vertices, model)
 end
 
 function love.keypressed(key, u)
@@ -100,11 +99,11 @@ function love.keypressed(key, u)
     end
     if key == "right" then
         currentIndex = currentIndex % #meshes + 1
-        sel, dragViewport = selection.new(), nil
+        sel = selection.new()
     end
     if key == "left" then
         currentIndex = (currentIndex - 2) % #meshes + 1
-        sel, dragViewport = selection.new(), nil
+        sel = selection.new()
     end
     if key == "down" then
         currentView = currentView % #views + 1
@@ -123,20 +122,10 @@ function love.draw()
     local v = views[currentView]
     v:draw(meshes[currentIndex], model, canvasWidth, canvasHeigh, love.graphics.setColor, love.graphics.line)
 
-    local function drawSelectionAt(vp)
-        selection.draw(sel, vp, meshes[currentIndex].vertices, model,
-            love.graphics.line,
-            function(x, y, r) love.graphics.circle("line", x, y, r) end)
-    end
-
     love.graphics.setColor(colors.Yellow)
-    if sel.dragging and dragViewport then
-        drawSelectionAt(dragViewport)
-    else
-        for _, q in ipairs(v:viewports(canvasWidth, canvasHeigh)) do
-            drawSelectionAt(q)
-        end
-    end
+    v:draw_selected(meshes[currentIndex], sel.selected, model, canvasWidth, canvasHeigh,
+        function(x, y) love.graphics.circle("line", x, y, selectionMarkerRadius) end)
+    selection.draw(sel, love.graphics.line)
     love.graphics.setColor(colors.RealWhite)
     love.graphics.setCanvas()
 

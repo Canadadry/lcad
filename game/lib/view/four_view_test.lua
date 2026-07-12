@@ -93,6 +93,48 @@ test("draw() splits the quadrants with a white cross line after drawing the view
     eq(horizontal[1], 0);  eq(horizontal[2], hh); eq(horizontal[3], w);  eq(horizontal[4], hh)
 end)
 
+test("draw_selected() draws the selected-vertex markers into every quadrant, offset to that quadrant's position", function()
+    local tl = view.new("tl", mat4.identity(), mat4.identity())
+    local tr = view.new("tr", mat4.identity(), mat4.identity())
+    local bl = view.new("bl", mat4.identity(), mat4.identity())
+    local br = view.new("br", mat4.identity(), mat4.identity())
+    local fv = four_view.new(tl, tr, bl, br)
+
+    local m = mesh.new({ { 0, 0, 0 } }, {}, {})
+
+    local w, h = 100, 80
+    local hw, hh = w / 2, h / 2
+    local circles = {}
+    local drawCircle = function(x, y) table.insert(circles, { x, y }) end
+
+    fv:draw_selected(m, { 1 }, mat4.identity(), w, h, drawCircle)
+
+    eq(#circles, 4)
+    local quadrants = {
+        { ox = 0,  oy = 0 },  -- tl
+        { ox = hw, oy = 0 },  -- tr
+        { ox = 0,  oy = hh }, -- bl
+        { ox = hw, oy = hh }, -- br
+    }
+    for i, quad in ipairs(quadrants) do
+        in_range(circles[i][1], quad.ox, quad.ox + hw, "quadrant " .. i .. " x")
+        in_range(circles[i][2], quad.oy, quad.oy + hh, "quadrant " .. i .. " y")
+    end
+end)
+
+test("draw_selected() calls drawCircle with only the screen position, no radius", function()
+    local blank = view.new("blank", mat4.identity(), mat4.identity())
+    local fv = four_view.new(blank, blank, blank, blank)
+    local m = mesh.new({ { 0, 0, 0 } }, {}, {})
+
+    local argCount
+    fv:draw_selected(m, { 1 }, mat4.identity(), 100, 80, function(...)
+        argCount = select("#", ...)
+    end)
+
+    eq(argCount, 2)
+end)
+
 test("viewport_at() resolves to the quadrant, its view and its screen offset for a point in the top-left quadrant", function()
     local tl = view.new("tl", mat4.identity(), mat4.identity())
     local tr = view.new("tr", mat4.identity(), mat4.identity())

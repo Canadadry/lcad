@@ -43,19 +43,6 @@ test("viewport_at() resolves to itself covering the full canvas, regardless of t
     eq(vp.h, 80)
 end)
 
-test("viewports() returns a single viewport covering the full canvas", function()
-    local v = view.new("test", mat4.identity(), mat4.identity())
-
-    local vps = view.viewports(v, 100, 80)
-
-    eq(#vps, 1)
-    eq(vps[1].view, v)
-    eq(vps[1].ox, 0)
-    eq(vps[1].oy, 0)
-    eq(vps[1].w, 100)
-    eq(vps[1].h, 80)
-end)
-
 test("draw() renders the mesh in white then the gizmo axes in their own colors, resetting to white after each", function()
     local v = view.new("test", mat4.identity(), mat4.identity())
     local m = mesh.new(
@@ -83,6 +70,23 @@ test("draw() renders the mesh in white then the gizmo axes in their own colors, 
 
     -- the 2-vertex face draws 2 edges (a->b and b->a) + 3 gizmo axis lines
     eq(lineCalls, 5)
+end)
+
+test("draw_selected() draws a circle for each selected vertex, projected through the view's own mvp", function()
+    local v = view.new("test", mat4.identity(), mat4.identity())
+    local m = mesh.new(
+        { { -0.5, 0, 0 }, { 0.5, 0, 0 } },
+        {}, {}
+    )
+
+    local circles = {}
+    v:draw_selected(m, { 1, 2 }, mat4.identity(), 100, 100, function(x, y)
+        table.insert(circles, { x = x, y = y })
+    end)
+
+    eq(#circles, 2)
+    eq(circles[1].x, 25); eq(circles[1].y, 50)
+    eq(circles[2].x, 75); eq(circles[2].y, 50)
 end)
 
 T.report()

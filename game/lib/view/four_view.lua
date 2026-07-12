@@ -23,6 +23,16 @@ function M.draw(fv, sceneMesh, model, w, h, setColor, drawLine)
     drawLine(0, hh, w, hh)
 end
 
+function M.draw_selected(fv, sceneMesh, selected, model, w, h, drawCircle)
+    local hw, hh = w / 2, h / 2
+    for i, v in ipairs(fv.views) do
+        local ox, oy = offsets[i].ox * hw, offsets[i].oy * hh
+        v:draw_selected(sceneMesh, selected, model, hw, hh, function(x, y)
+            drawCircle(x + ox, y + oy)
+        end)
+    end
+end
+
 function M.quadrants(fv, w, h)
     local hw, hh = w / 2, h / 2
     local qs = {}
@@ -49,8 +59,8 @@ function M.new(topLeft, topRight, bottomLeft, bottomRight)
     return {
         views = { topLeft, topRight, bottomLeft, bottomRight },
         draw = M.draw,
+        draw_selected = M.draw_selected,
         viewport_at = M.viewport_at,
-        viewports = M.quadrants,
     }
 end
 
