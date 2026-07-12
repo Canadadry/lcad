@@ -36,7 +36,7 @@ local currentView = #views
 
 local M = {}
 
-function M.load()
+function M:load()
     for i, path in ipairs(assetPaths) do
         meshes[i] = obj_import.load(path)
     end
@@ -54,7 +54,7 @@ local function drawCursor(cx, cy)
     cursor.draw(cursorIcon, cx, cy, sel.dragging or sel.moving, hovering)
 end
 
-function M.mousepressed(cx, cy, button)
+function M:mousepressed(cx, cy, button)
     if button ~= 1 then
         return
     end
@@ -69,7 +69,7 @@ function M.mousepressed(cx, cy, button)
     end
 end
 
-function M.mousemoved(cx, cy)
+function M:mousemoved(cx, cy)
     if sel.moving then
         selection.update_move(sel, meshes[currentIndex].vertices, cx, cy)
     elseif sel.dragging then
@@ -77,7 +77,7 @@ function M.mousemoved(cx, cy)
     end
 end
 
-function M.mousereleased(cx, cy, button)
+function M:mousereleased(cx, cy, button)
     if button ~= 1 or not (sel.dragging or sel.moving) then
         return
     end
@@ -88,7 +88,7 @@ function M.mousereleased(cx, cy, button)
     end
 end
 
-function M.keypressed(key)
+function M:keypressed(key)
     if key == "right" then
         currentIndex = currentIndex % #meshes + 1
         sel = selection.new()
@@ -105,7 +105,7 @@ function M.keypressed(key)
     end
 end
 
-function M.draw(cx, cy)
+function M:draw(cx, cy)
     love.graphics.clear(colors.DarkGray)
     local v = views[currentView]
     v:draw(meshes[currentIndex], const.canvasWidth, const.canvasHeight, love.graphics.setColor, love.graphics.line)
