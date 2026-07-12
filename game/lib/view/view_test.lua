@@ -1,4 +1,4 @@
-local generic = require("lib.view.generic")
+local view = require("lib.view.view")
 local mesh = require("lib.scene.mesh")
 local mat4 = require("lib.mat4")
 local colors = require("lib.colors")
@@ -15,16 +15,16 @@ local function eq_mat(a, b)
 end
 
 test("new() stores name, view and projection", function()
-    local view, projection = mat4.identity(), mat4.rotate_y(1)
-    local v = generic.new("test", view, projection)
+    local viewMatrix, projection = mat4.identity(), mat4.rotate_y(1)
+    local v = view.new("test", viewMatrix, projection)
 
     eq(v.name, "test")
-    eq(v.view, view)
+    eq(v.view, viewMatrix)
     eq(v.projection, projection)
 end)
 
 test("mvp() composes projection * view * model", function()
-    local v = generic.new("test", mat4.translate(1, 0, 0), mat4.scale(2))
+    local v = view.new("test", mat4.translate(1, 0, 0), mat4.scale(2))
 
     local mvp = v:mvp(mat4.identity())
 
@@ -32,7 +32,7 @@ test("mvp() composes projection * view * model", function()
 end)
 
 test("draw() renders the mesh in white then the gizmo axes in their own colors, resetting to white after each", function()
-    local v = generic.new("test", mat4.identity(), mat4.identity())
+    local v = view.new("test", mat4.identity(), mat4.identity())
     local m = mesh.new(
         { { 0, 0, 0 }, { 1, 0, 0 } },
         {},

@@ -4,22 +4,13 @@ local gizmo = require("lib.scene.gizmo")
 local colors = require("lib.colors")
 
 local M = {}
-M.__index = M
 
-function M.new(name, view, projection)
-    return setmetatable({
-        name = name,
-        view = view,
-        projection = projection,
-    }, M)
+function M.mvp(v, model)
+    return mat4.mul(v.projection, mat4.mul(v.view, model))
 end
 
-function M:mvp(model)
-    return mat4.mul(self.projection, mat4.mul(self.view, model))
-end
-
-function M:draw(sceneMesh, model, w, h, setColor, drawLine)
-    local mvp = self:mvp(model)
+function M.draw(v, sceneMesh, model, w, h, setColor, drawLine)
+    local mvp = M.mvp(v, model)
 
     setColor(colors.RealWhite)
     mesh.draw(sceneMesh, mvp, w, h, drawLine)
@@ -27,8 +18,18 @@ function M:draw(sceneMesh, model, w, h, setColor, drawLine)
     gizmo.draw(mvp, w, h, function(x1, y1, x2, y2, color)
         setColor(color)
         drawLine(x1, y1, x2, y2)
-        setColor(colors.RealWhite)
     end)
+    setColor(colors.RealWhite)
+end
+
+function M.new(name, view, projection)
+    return {
+        name = name,
+        view = view,
+        projection = projection,
+        mvp = M.mvp,
+        draw = M.draw,
+    }
 end
 
 return M
