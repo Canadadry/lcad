@@ -1,0 +1,38 @@
+# hand-authored 6-vertex triangular prism, centered on origin, UVs included
+v 0.0 -1.0 1.0
+v -0.8660254 -1.0 -0.5
+v 0.8660254 -1.0 -0.5
+v 0.0 1.0 1.0
+v -0.8660254 1.0 -0.5
+v 0.8660254 1.0 -0.5
+
+# UV per face corner (PRD 46): each face gets its own independent vt block,
+# never shared with another face. The two triangle caps map their first
+# corner to top-center (0.5, 1.0) and the other two to bottom-left/right
+# (0.0, 0.0) / (1.0, 0.0), an undistorted triangle instead of the old
+# flattened-to-a-line placeholder. The 3 side quads each get their own full
+# (0,0)-(1,0)-(1,1)-(0,1) unit square.
+vt 0.5 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 0.5 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+
+f 3/1 2/2 1/3
+f 4/4 5/5 6/6
+f 1/7 2/8 5/9 4/10
+f 2/11 3/12 6/13 5/14
+f 3/15 1/16 4/17 6/18

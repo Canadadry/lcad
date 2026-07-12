@@ -1,0 +1,35 @@
+# hand-authored 5-vertex pyramid (square base + apex), centered on origin, UVs included
+v 0.0 1.0 0.0
+v -1.0 -1.0 -1.0
+v 1.0 -1.0 -1.0
+v 1.0 -1.0 1.0
+v -1.0 -1.0 1.0
+
+# UV per face corner (PRD 46): each face gets its own independent vt block,
+# never shared with another face. The base quad maps to the full unit
+# square; each triangular side maps its apex corner to the top-center
+# (0.5, 1.0) and its two base corners to the bottom-left/right (0.0, 0.0)
+# and (1.0, 0.0), the same undistorted-triangle convention used by the
+# prism's cap faces.
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.5 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 0.5 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 0.5 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 0.5 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+
+f 5/1 4/2 3/3 2/4
+f 1/5 2/6 3/7
+f 1/8 3/9 4/10
+f 1/11 4/12 5/13
+f 1/14 5/15 2/16

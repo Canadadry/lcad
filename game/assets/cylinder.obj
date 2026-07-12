@@ -1,0 +1,84 @@
+# hand-authored 16-vertex, 8-sided cylinder (radius 1, height 2), centered on origin, UVs included
+v 1.0 -1.0 0.0
+v 0.7071068 -1.0 0.7071068
+v 0.0 -1.0 1.0
+v -0.7071068 -1.0 0.7071068
+v -1.0 -1.0 0.0
+v -0.7071068 -1.0 -0.7071068
+v 0.0 -1.0 -1.0
+v 0.7071068 -1.0 -0.7071068
+v 1.0 1.0 0.0
+v 0.7071068 1.0 0.7071068
+v 0.0 1.0 1.0
+v -0.7071068 1.0 0.7071068
+v -1.0 1.0 0.0
+v -0.7071068 1.0 -0.7071068
+v 0.0 1.0 -1.0
+v 0.7071068 1.0 -0.7071068
+
+# UV per face corner (PRD 46): each face gets its own independent vt block,
+# never shared with another face. The two octagon caps get a radial mapping
+# derived from each vertex's actual (x, z) position (u=(x+1)/2, v=(z+1)/2),
+# so the cap renders as an undistorted octagon instead of a flattened strip.
+# The 8 side quads each get their own full (0,0)-(1,0)-(1,1)-(0,1) unit
+# square, one per face, so no two side faces (even adjacent ones sharing an
+# edge) share a draggable UV point.
+vt 0.8535534 0.1464466
+vt 0.5       0.0
+vt 0.1464466 0.1464466
+vt 0.0       0.5
+vt 0.1464466 0.8535534
+vt 0.5       1.0
+vt 0.8535534 0.8535534
+vt 1.0       0.5
+vt 1.0       0.5
+vt 0.8535534 0.8535534
+vt 0.5       1.0
+vt 0.1464466 0.8535534
+vt 0.0       0.5
+vt 0.1464466 0.1464466
+vt 0.5       0.0
+vt 0.8535534 0.1464466
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+
+f 8/1 7/2 6/3 5/4 4/5 3/6 2/7 1/8
+f 9/9 10/10 11/11 12/12 13/13 14/14 15/15 16/16
+f 1/17 2/18 10/19 9/20
+f 2/21 3/22 11/23 10/24
+f 3/25 4/26 12/27 11/28
+f 4/29 5/30 13/31 12/32
+f 5/33 6/34 14/35 13/36
+f 6/37 7/38 15/39 14/40
+f 7/41 8/42 16/43 15/44
+f 8/45 1/46 9/47 16/48
