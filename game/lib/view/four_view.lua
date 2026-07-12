@@ -1,0 +1,33 @@
+local colors = require("lib.colors")
+
+local M = {}
+
+local offsets = {
+    { ox = 0, oy = 0 }, -- topLeft
+    { ox = 1, oy = 0 }, -- topRight
+    { ox = 0, oy = 1 }, -- bottomLeft
+    { ox = 1, oy = 1 }, -- bottomRight
+}
+
+function M.draw(fv, sceneMesh, model, w, h, setColor, drawLine)
+    local hw, hh = w / 2, h / 2
+    for i, v in ipairs(fv.views) do
+        local ox, oy = offsets[i].ox * hw, offsets[i].oy * hh
+        v:draw(sceneMesh, model, hw, hh, setColor, function(x1, y1, x2, y2)
+            drawLine(x1 + ox, y1 + oy, x2 + ox, y2 + oy)
+        end)
+    end
+
+    setColor(colors.White)
+    drawLine(hw, 0, hw, h)
+    drawLine(0, hh, w, hh)
+end
+
+function M.new(topLeft, topRight, bottomLeft, bottomRight)
+    return {
+        views = { topLeft, topRight, bottomLeft, bottomRight },
+        draw = M.draw,
+    }
+end
+
+return M

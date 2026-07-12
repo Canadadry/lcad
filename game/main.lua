@@ -4,6 +4,7 @@ local mat4 = require("lib.mat4")
 local obj_import = require("lib.scene.obj_import")
 
 local ortho = require("lib.view.ortho")
+local four_view = require("lib.view.four_view")
 local viewFactories = {
     require("lib.view.perspective"),
     ortho.x,
@@ -27,6 +28,7 @@ local currentIndex = 1
 local model = mat4.identity()
 local rotation = 0
 local rotationSpeed = _G.math.rad(45)
+local rotate = true
 
 local views = {}
 local currentView = 1
@@ -42,11 +44,14 @@ function love.load()
     for i, factory in ipairs(viewFactories) do
         views[i] = factory(canvasWidth, canvasHeigh)
     end
+    views[#views + 1] = four_view.new(views[1], views[2], views[3], views[4])
 end
 
 function love.update(dt)
-    rotation = rotation + rotationSpeed * dt
-    model = mat4.rotate_y(rotation)
+    if rotate then
+        rotation = rotation + rotationSpeed * dt
+        model = mat4.rotate_y(rotation)
+    end
 end
 
 function love.keypressed(key, u)
@@ -64,6 +69,9 @@ function love.keypressed(key, u)
     end
     if key == "up" then
         currentView = (currentView - 2) % #views + 1
+    end
+    if key == "space" then
+        rotate = not rotate
     end
 end
 
