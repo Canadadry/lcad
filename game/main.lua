@@ -1,5 +1,6 @@
 local math = require("lib.math")
 local colors = require("lib.colors")
+local cursor = require("lib.cursor")
 local mat4 = require("lib.mat4")
 local obj_import = require("lib.scene.obj_import")
 local selection = require("lib.scene.selection")
@@ -16,6 +17,7 @@ local assetPaths = {
 }
 
 local screenCanvas
+local cursorIcon
 local canvasWidth = 171
 local canvasHeigh = 128
 local selectionMarkerRadius = 3
@@ -50,6 +52,7 @@ function love.load()
     for i, path in ipairs(assetPaths) do
         meshes[i] = obj_import.load(path)
     end
+    cursorIcon = cursor.load("assets/icon.png", 8)
 end
 
 function love.update(dt)
@@ -127,6 +130,9 @@ function love.draw()
         function(x, y) love.graphics.circle("line", x, y, selectionMarkerRadius) end)
     selection.draw(sel, love.graphics.line)
     love.graphics.setColor(colors.RealWhite)
+    local mx, my = love.mouse.getPosition()
+    local cx, cy = windowToCanvas(mx, my)
+    cursor.draw(cursorIcon, cx, cy, sel.dragging)
     love.graphics.setCanvas()
 
     love.graphics.clear(colors.Black)

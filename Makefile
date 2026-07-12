@@ -11,3 +11,6 @@ run:
 test:
 	cd game && lua ../tests/test_all.lua
 
+csv2png:
+	$(LOVE) tools/csv2png tools/csv2png/icon.csv game/assets/icon.png FFFFFF 1
+

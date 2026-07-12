@@ -43,7 +43,7 @@ test("viewport_at() resolves to itself covering the full canvas, regardless of t
     eq(vp.h, 80)
 end)
 
-test("draw() renders the mesh in white then the gizmo axes in their own colors, resetting to white after each", function()
+test("draw() renders the mesh in white then the gizmo axes in their own colors, resetting to white once at the end", function()
     local v = view.new("test", mat4.identity(), mat4.identity())
     local m = mesh.new(
         { { 0, 0, 0 }, { 1, 0, 0 } },
@@ -58,15 +58,13 @@ test("draw() renders the mesh in white then the gizmo axes in their own colors, 
 
     v:draw(m, mat4.identity(), 2, 2, setColor, drawLine)
 
-    -- 1 white for the mesh, then (color, white) per gizmo axis
-    eq(#colorCalls, 1 + 3 * 2)
+    -- 1 white for the mesh, then 1 color per gizmo axis, then 1 white reset at the end
+    eq(#colorCalls, 1 + 3 + 1)
     eq(colorCalls[1], colors.RealWhite)
     eq(colorCalls[2], colors.Red)
-    eq(colorCalls[3], colors.RealWhite)
-    eq(colorCalls[4], colors.Green)
+    eq(colorCalls[3], colors.Green)
+    eq(colorCalls[4], colors.Blue)
     eq(colorCalls[5], colors.RealWhite)
-    eq(colorCalls[6], colors.Blue)
-    eq(colorCalls[7], colors.RealWhite)
 
     -- the 2-vertex face draws 2 edges (a->b and b->a) + 3 gizmo axis lines
     eq(lineCalls, 5)
