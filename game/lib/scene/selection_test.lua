@@ -6,7 +6,11 @@ local test = T.test
 local eq   = T.eq
 
 local function view_with_mvp(mvp)
-    return { mvp = function(_, model) return mvp end }
+    return {
+        world_to_screen = function(_, point, w, h)
+            return mat4.project(mvp, point, w, h)
+        end,
+    }
 end
 
 local function approx(a, b, eps)
@@ -103,7 +107,7 @@ test("end_drag() selects vertex indices whose projection falls inside the drag r
 
     selection.begin_drag(sel, vp, 20, 40)
     selection.update_drag(sel, 80, 60)
-    selection.end_drag(sel, vertices, nil)
+    selection.end_drag(sel, vertices)
 
     eq(sel.dragging, false)
     eq(#sel.selected, 2)
@@ -116,7 +120,7 @@ test("draw() draws no rectangle once the drag has ended", function()
     local vp = { view = view_with_mvp(mat4.identity()), ox = 0, oy = 0, w = 100, h = 100 }
     selection.begin_drag(sel, vp, 20, 40)
     selection.update_drag(sel, 80, 60)
-    selection.end_drag(sel, {}, nil)
+    selection.end_drag(sel, {})
 
     selection.draw(sel, function() error("drawLine should not be called once the drag has ended") end)
 end)
@@ -131,13 +135,13 @@ test("end_drag() replaces the previous selection rather than accumulating it", f
 
     selection.begin_drag(sel, vp, 0, 40)
     selection.update_drag(sel, 50, 60)
-    selection.end_drag(sel, vertices, nil)
+    selection.end_drag(sel, vertices)
     eq(#sel.selected, 1)
     eq(sel.selected[1], 1)
 
     selection.begin_drag(sel, vp, 50, 40)
     selection.update_drag(sel, 100, 60)
-    selection.end_drag(sel, vertices, nil)
+    selection.end_drag(sel, vertices)
 
     eq(#sel.selected, 1)
     eq(sel.selected[1], 2)
@@ -151,7 +155,7 @@ test("end_drag() normalizes the rectangle regardless of drag direction", functio
     -- dragged from bottom-right to top-left
     selection.begin_drag(sel, vp, 80, 60)
     selection.update_drag(sel, 20, 40)
-    selection.end_drag(sel, vertices, nil)
+    selection.end_drag(sel, vertices)
 
     eq(#sel.selected, 1)
     eq(sel.selected[1], 1)
@@ -184,7 +188,7 @@ test("is_near_selected() returns true when the point is within radius of a selec
     local vertices = { { -0.5, 0, 0 } } -- projects to (25, 50)
     sel.selected = { 1 }
 
-    eq(selection.is_near_selected(sel, vp, vertices, nil, 27, 50, 3), true)
+    eq(selection.is_near_selected(sel, vp, vertices, 27, 50, 3), true)
 end)
 
 test("is_near_selected() returns false when the point is outside radius of every selected vertex's projection", function()
@@ -193,7 +197,7 @@ test("is_near_selected() returns false when the point is outside radius of every
     local vertices = { { -0.5, 0, 0 } } -- projects to (25, 50)
     sel.selected = { 1 }
 
-    eq(selection.is_near_selected(sel, vp, vertices, nil, 40, 50, 3), false)
+    eq(selection.is_near_selected(sel, vp, vertices, 40, 50, 3), false)
 end)
 
 test("is_near_selected() returns false when nothing is selected", function()
@@ -201,7 +205,7 @@ test("is_near_selected() returns false when nothing is selected", function()
     local vp = { view = view_with_mvp(mat4.identity()), ox = 0, oy = 0, w = 100, h = 100 }
     local vertices = { { -0.5, 0, 0 } } -- projects to (25, 50)
 
-    eq(selection.is_near_selected(sel, vp, vertices, nil, 25, 50, 3), false)
+    eq(selection.is_near_selected(sel, vp, vertices, 25, 50, 3), false)
 end)
 
 test("is_near_selected() offsets the point by the viewport's screen offset before comparing", function()
@@ -210,12 +214,19 @@ test("is_near_selected() offsets the point by the viewport's screen offset befor
     local vertices = { { -0.5, 0, 0 } } -- projects to (25, 50) in viewport-local space
     sel.selected = { 1 }
 
-    eq(selection.is_near_selected(sel, vp, vertices, nil, 227, 150, 3), true)
+    eq(selection.is_near_selected(sel, vp, vertices, 227, 150, 3), true)
 end)
 
-test("begin_move() marks the selection as moving and snapshots the selected vertices' positions", function()
+test("begin_move() marks the selection as moving, snapshots the selected vertices' positions in selection order, and captures their barycenter's depth", function()
     local sel = selection.new()
-    local vp = { ox = 0, oy = 0, view = {} }
+    local depth_calls = {}
+    local view = {
+        depth_of = function(v, point)
+            depth_calls[#depth_calls + 1] = { point[1], point[2], point[3] }
+            return 42
+        end,
+    }
+    local vp = { ox = 0, oy = 0, view = view }
     local vertices = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } }
     sel.selected = { 1, 3 }
 
@@ -223,53 +234,44 @@ test("begin_move() marks the selection as moving and snapshots the selected vert
 
     eq(sel.moving, true)
     eq(sel.move_origin[1][1], 1); eq(sel.move_origin[1][2], 2); eq(sel.move_origin[1][3], 3)
-    eq(sel.move_origin[3][1], 7); eq(sel.move_origin[3][2], 8); eq(sel.move_origin[3][3], 9)
+    eq(sel.move_origin[2][1], 7); eq(sel.move_origin[2][2], 8); eq(sel.move_origin[2][3], 9)
+
+    eq(#depth_calls, 1)
+    eq(depth_calls[1][1], 4); eq(depth_calls[1][2], 5); eq(depth_calls[1][3], 6)
+    eq(sel.move_depth, 42)
 end)
 
-test("update_move() calls the view's move_delta with the screen delta since the move started, and applies the returned delta to every selected vertex from its snapshot", function()
+test("update_move() converts the move-start and current screen points to world space at the captured depth, and applies their difference to every selected vertex from its snapshot", function()
     local sel = selection.new()
     local calls = {}
     local view = {
-        move_delta = function(v, model, w, h, dsx, dsy)
-            calls[#calls + 1] = { model = model, w = w, h = h, dsx = dsx, dsy = dsy }
-            return { 1, -2, 3 }
+        depth_of = function() return 42 end,
+        screen_to_world = function(v, sx, sy, depth, w, h)
+            calls[#calls + 1] = { sx = sx, sy = sy, depth = depth, w = w, h = h }
+            if sx == 10 and sy == 10 then
+                return 0, 0, 0
+            end
+            return 1, -2, 3
         end,
     }
     local vp = { ox = 0, oy = 0, w = 100, h = 100, view = view }
     local vertices = { { 0, 0, 0 }, { 5, 5, 5 } }
     sel.selected = { 1, 2 }
-    local model = mat4.identity()
 
     selection.begin_move(sel, vp, vertices, 10, 10)
-    selection.update_move(sel, vertices, model, 60, 30)
+    selection.update_move(sel, vertices, 60, 30)
 
-    eq(#calls, 1)
-    eq(calls[1].model, model)
-    eq(calls[1].w, 100)
-    eq(calls[1].h, 100)
-    eq(calls[1].dsx, 50)
-    eq(calls[1].dsy, 20)
+    eq(#calls, 2)
+    eq(calls[1].sx, 10); eq(calls[1].sy, 10); eq(calls[1].depth, 42); eq(calls[1].w, 100); eq(calls[1].h, 100)
+    eq(calls[2].sx, 60); eq(calls[2].sy, 30); eq(calls[2].depth, 42); eq(calls[2].w, 100); eq(calls[2].h, 100)
 
     eq(vertices[1][1], 1); eq(vertices[1][2], -2); eq(vertices[1][3], 3)
     eq(vertices[2][1], 6); eq(vertices[2][2], 3); eq(vertices[2][3], 8)
 end)
 
-test("update_move() is a no-op when the view has no move_delta (e.g. a perspective view)", function()
-    local sel = selection.new()
-    local vp = { ox = 0, oy = 0, w = 100, h = 100, view = {} }
-    local vertices = { { 1, 2, 3 } }
-    sel.selected = { 1 }
-    local model = mat4.identity()
-
-    selection.begin_move(sel, vp, vertices, 10, 10)
-    selection.update_move(sel, vertices, model, 60, 30)
-
-    eq(vertices[1][1], 1); eq(vertices[1][2], 2); eq(vertices[1][3], 3)
-end)
-
 test("end_move() stops moving", function()
     local sel = selection.new()
-    local vp = { ox = 0, oy = 0, view = {} }
+    local vp = { ox = 0, oy = 0, view = { depth_of = function() return 0 end } }
     local vertices = { { 1, 2, 3 } }
     sel.selected = { 1 }
 

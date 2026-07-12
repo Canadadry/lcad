@@ -1,4 +1,4 @@
-local mat4 = require("lib.mat4")
+local vec3 = require("lib.vec3")
 
 local M = {}
 
@@ -38,15 +38,14 @@ function M.update_drag(sel, cx, cy)
     sel.current.y = y
 end
 
-function M.end_drag(sel, vertices, model)
+function M.end_drag(sel, vertices)
     local vp = sel.viewport
-    local mvp = vp.view:mvp(model)
     local minX, maxX = math.min(sel.start.x, sel.current.x), math.max(sel.start.x, sel.current.x)
     local minY, maxY = math.min(sel.start.y, sel.current.y), math.max(sel.start.y, sel.current.y)
 
     local selected = {}
     for i, vertex in ipairs(vertices) do
-        local x, y = mat4.project(mvp, vertex, vp.w, vp.h)
+        local x, y = vp.view:world_to_screen(vertex, vp.w, vp.h)
         if x >= minX and x <= maxX and y >= minY and y <= maxY then
             selected[#selected + 1] = i
         end
@@ -59,26 +58,23 @@ end
 function M.begin_move(sel, vp, vertices, cx, cy)
     sel.moving = true
     sel.viewport = vp
-    sel.move_start = { x = cx - vp.ox, y = cy - vp.oy }
+    sel.move_start = { x = cx, y = cy }
     sel.move_origin = {}
-    for _, i in ipairs(sel.selected) do
+    for j, i in ipairs(sel.selected) do
         local v = vertices[i]
-        sel.move_origin[i] = { v[1], v[2], v[3] }
+        sel.move_origin[j] = { v[1], v[2], v[3] }
     end
+    sel.move_depth = vp.view:depth_of(vec3.barycenter(sel.move_origin))
 end
 
-function M.update_move(sel, vertices, model, cx, cy)
+function M.update_move(sel, vertices, cx, cy)
     local vp = sel.viewport
-    if not vp.view.move_delta then
-        return
-    end
+    local x1, y1, z1 = vp.view:screen_to_world(sel.move_start.x, sel.move_start.y, sel.move_depth, vp.w, vp.h)
+    local x2, y2, z2 = vp.view:screen_to_world(cx, cy, sel.move_depth, vp.w, vp.h)
+    local d = vec3.sub({ x2, y2, z2 }, { x1, y1, z1 })
 
-    local x, y = cx - vp.ox, cy - vp.oy
-    local dsx, dsy = x - sel.move_start.x, y - sel.move_start.y
-    local d = vp.view:move_delta(model, vp.w, vp.h, dsx, dsy)
-
-    for _, i in ipairs(sel.selected) do
-        local origin = sel.move_origin[i]
+    for j, i in ipairs(sel.selected) do
+        local origin = sel.move_origin[j]
         local v = vertices[i]
         v[1] = origin[1] + d[1]
         v[2] = origin[2] + d[2]
@@ -90,11 +86,10 @@ function M.end_move(sel)
     sel.moving = false
 end
 
-function M.is_near_selected(sel, vp, vertices, model, cx, cy, radius)
-    local mvp = vp.view:mvp(model)
+function M.is_near_selected(sel, vp, vertices, cx, cy, radius)
     local x, y = cx - vp.ox, cy - vp.oy
     for _, i in ipairs(sel.selected) do
-        local vx, vy = mat4.project(mvp, vertices[i], vp.w, vp.h)
+        local vx, vy = vp.view:world_to_screen(vertices[i], vp.w, vp.h)
         local dx, dy = vx - x, vy - y
         if dx * dx + dy * dy <= radius * radius then
             return true

@@ -127,10 +127,59 @@ function M.transpose(m)
     return r
 end
 
+local function elem(m, row, col)
+    return m[col * 4 + row + 1]
+end
+
+local function det3(a, b, c, d, e, f, g, h, i)
+    return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g)
+end
+
+local function minor(m, skip_row, skip_col)
+    local vals = {}
+    for row = 0, 3 do
+        if row ~= skip_row then
+            for col = 0, 3 do
+                if col ~= skip_col then
+                    vals[#vals + 1] = elem(m, row, col)
+                end
+            end
+        end
+    end
+    return det3(vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8], vals[9])
+end
+
+local function cofactor(m, row, col)
+    local sign = ((row + col) % 2 == 0) and 1 or -1
+    return sign * minor(m, row, col)
+end
+
+function M.invert(m)
+    local det = 0
+    for col = 0, 3 do
+        det = det + elem(m, 0, col) * cofactor(m, 0, col)
+    end
+
+    local r = {}
+    for row = 0, 3 do
+        for col = 0, 3 do
+            r[col * 4 + row + 1] = cofactor(m, col, row) / det
+        end
+    end
+    return r
+end
+
 function M.project(mvp, vertex, w, h)
     local clip = M.mul_vec4(mvp, { vertex[1], vertex[2], vertex[3], 1 })
     local ndc_x, ndc_y = clip[1] / clip[4], clip[2] / clip[4]
     return (ndc_x * 0.5 + 0.5) * w, (1 - (ndc_y * 0.5 + 0.5)) * h
+end
+
+function M.unproject(proj, sx, sy, depth, w, h)
+    local clip_w = proj[12] * depth + proj[16]
+    local ndc_x = (sx / w) * 2 - 1
+    local ndc_y = 1 - (sy / h) * 2
+    return ndc_x * clip_w / proj[1], ndc_y * clip_w / proj[6]
 end
 
 return M

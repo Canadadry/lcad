@@ -47,7 +47,7 @@ test("draw() renders each of the 4 views into its own screen quadrant", function
     local setColor = function() end
     local drawLine = function(x1, y1, x2, y2) table.insert(lines, { x1, y1, x2, y2 }) end
 
-    fv:draw(m, mat4.identity(), w, h, setColor, drawLine)
+    fv:draw(m, w, h, setColor, drawLine)
 
     -- 5 lines per view (2 mesh edges + 3 gizmo axes), in view order: tl, tr, bl, br,
     -- plus 2 divider lines drawn after all views
@@ -83,7 +83,7 @@ test("draw() splits the quadrants with a white cross line after drawing the view
     local setColor = function(c) table.insert(colorCalls, c) end
     local drawLine = function(x1, y1, x2, y2) table.insert(lines, { x1, y1, x2, y2 }) end
 
-    fv:draw(m, mat4.identity(), w, h, setColor, drawLine)
+    fv:draw(m, w, h, setColor, drawLine)
 
     -- last color set is white, then a vertical and a horizontal divider line
     -- span the last 2 of the captured lines (after each view's own gizmo lines)
@@ -107,7 +107,7 @@ test("draw_selected() draws the selected-vertex markers into every quadrant, off
     local circles = {}
     local drawCircle = function(x, y) table.insert(circles, { x, y }) end
 
-    fv:draw_selected(m, { 1 }, mat4.identity(), w, h, drawCircle)
+    fv:draw_selected(m, { 1 }, w, h, drawCircle)
 
     eq(#circles, 4)
     local quadrants = {
@@ -128,7 +128,7 @@ test("draw_selected() calls drawCircle with only the screen position, no radius"
     local m = mesh.new({ { 0, 0, 0 } }, {}, {})
 
     local argCount
-    fv:draw_selected(m, { 1 }, mat4.identity(), 100, 80, function(...)
+    fv:draw_selected(m, { 1 }, 100, 80, function(...)
         argCount = select("#", ...)
     end)
 

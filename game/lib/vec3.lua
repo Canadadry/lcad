@@ -25,5 +25,14 @@ function M.normalize(a)
     return M.new( a[1] / len, a[2] / len, a[3] / len )
 end
 
+function M.barycenter(points)
+    local x, y, z = 0, 0, 0
+    for _, p in ipairs(points) do
+        x, y, z = x + p[1], y + p[2], z + p[3]
+    end
+    local n = #points
+    return M.new(x / n, y / n, z / n)
+end
+
 
 return M

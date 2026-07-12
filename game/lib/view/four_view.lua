@@ -9,11 +9,11 @@ local offsets = {
     { ox = 1, oy = 1 }, -- bottomRight
 }
 
-function M.draw(fv, sceneMesh, model, w, h, setColor, drawLine)
+function M.draw(fv, sceneMesh, w, h, setColor, drawLine)
     local hw, hh = w / 2, h / 2
     for i, v in ipairs(fv.views) do
         local ox, oy = offsets[i].ox * hw, offsets[i].oy * hh
-        v:draw(sceneMesh, model, hw, hh, setColor, function(x1, y1, x2, y2)
+        v:draw(sceneMesh, hw, hh, setColor, function(x1, y1, x2, y2)
             drawLine(x1 + ox, y1 + oy, x2 + ox, y2 + oy)
         end)
     end
@@ -23,11 +23,11 @@ function M.draw(fv, sceneMesh, model, w, h, setColor, drawLine)
     drawLine(0, hh, w, hh)
 end
 
-function M.draw_selected(fv, sceneMesh, selected, model, w, h, drawCircle)
+function M.draw_selected(fv, sceneMesh, selected, w, h, drawCircle)
     local hw, hh = w / 2, h / 2
     for i, v in ipairs(fv.views) do
         local ox, oy = offsets[i].ox * hw, offsets[i].oy * hh
-        v:draw_selected(sceneMesh, selected, model, hw, hh, function(x, y)
+        v:draw_selected(sceneMesh, selected, hw, hh, function(x, y)
             drawCircle(x + ox, y + oy)
         end)
     end

@@ -136,6 +136,50 @@ test("transpose of a rotation matrix is its inverse", function()
     end
 end)
 
+test("invert() of the identity is the identity", function()
+    local inv = mat4.invert(mat4.identity())
+
+    for i = 1, 16 do
+        local expected = ((i - 1) % 5 == 0) and 1 or 0
+        eq(approx(inv[i], expected), true, "index " .. i)
+    end
+end)
+
+test("invert() undoes a scale+rotate+translate transform on a point (not just a rigid one)", function()
+    local m = mat4.mul(mat4.translate(3, -1, 2), mat4.mul(mat4.rotate_y(math.rad(40)), mat4.scale(2.5)))
+    local point = { 1, 2, 3 }
+
+    local transformed = mat4.mul_vec4(m, { point[1], point[2], point[3], 1 })
+    local back = mat4.mul_vec4(mat4.invert(m), transformed)
+
+    eq(approx(back[1], point[1]), true, "x")
+    eq(approx(back[2], point[2]), true, "y")
+    eq(approx(back[3], point[3]), true, "z")
+    eq(approx(back[4], 1), true, "w")
+end)
+
+test("invert() of a pure translation just negates it", function()
+    local m = mat4.translate(5, -2, 3)
+
+    local r = mat4.mul_vec4(mat4.invert(m), { 0, 0, 0, 1 })
+
+    eq(approx(r[1], -5), true, "x")
+    eq(approx(r[2], 2), true, "y")
+    eq(approx(r[3], -3), true, "z")
+end)
+
+test("invert() composed with a scale+rotate+translate matrix is the identity", function()
+    local m = mat4.mul(mat4.translate(3, -1, 2), mat4.mul(mat4.rotate_y(math.rad(40)), mat4.scale(2.5)))
+    local product = mat4.mul(mat4.invert(m), m)
+
+    for col = 0, 3 do
+        for row = 0, 3 do
+            local expected = (col == row) and 1 or 0
+            eq(approx(product[col * 4 + row + 1], expected), true, "col " .. col .. " row " .. row)
+        end
+    end
+end)
+
 test("perspective produces expected matrix elements for a 90deg fov", function()
     local m = mat4.perspective(math.rad(90), 1, 1, 101)
     eq(approx(m[1], 1), true, "col0 row0 = 1/(aspect*tan(45))")
@@ -172,6 +216,38 @@ test("project maps NDC (1, 0) to the right edge, vertical center", function()
     local x, y = mat4.project(mat4.identity(), { 1, 0, 0 }, 800, 600)
     eq(x, 800)
     eq(y, 300)
+end)
+
+test("unproject() is the inverse of project() at a fixed depth, for an orthographic projection", function()
+    local proj = mat4.orthographic(-1, 1, -1, 1, 0.1, 100)
+    local point = { 0.3, -0.2, 0.5 }
+    local sx, sy = mat4.project(proj, point, 100, 100)
+
+    local x, y = mat4.unproject(proj, sx, sy, point[3], 100, 100)
+
+    eq(approx(x, point[1]), true, "x")
+    eq(approx(y, point[2]), true, "y")
+end)
+
+test("unproject() is the inverse of project(), for a perspective projection", function()
+    local proj = mat4.perspective(math.rad(60), 1, 0.1, 100)
+    local point = { 0.3, -0.2, -5 }
+    local sx, sy = mat4.project(proj, point, 100, 100)
+
+    local x, y = mat4.unproject(proj, sx, sy, point[3], 100, 100)
+
+    eq(approx(x, point[1]), true, "x")
+    eq(approx(y, point[2]), true, "y")
+end)
+
+test("unproject() ignores depth for an orthographic projection", function()
+    local proj = mat4.orthographic(-1, 1, -1, 1, 0.1, 100)
+
+    local nx, ny = mat4.unproject(proj, 60, 40, 1, 100, 100)
+    local fx, fy = mat4.unproject(proj, 60, 40, 999, 100, 100)
+
+    eq(approx(nx, fx), true, "x")
+    eq(approx(ny, fy), true, "y")
 end)
 
 T.report()

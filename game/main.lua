@@ -1,7 +1,6 @@
 local math = require("lib.math")
 local colors = require("lib.colors")
 local cursor = require("lib.cursor")
-local mat4 = require("lib.mat4")
 local obj_import = require("lib.scene.obj_import")
 local selection = require("lib.scene.selection")
 local ortho = require("lib.view.ortho")
@@ -23,11 +22,6 @@ local canvasHeigh = 128
 local selectionMarkerRadius = 3
 local meshes = {}
 local currentIndex = 1
-local model = mat4.identity()
-local rotation = 0
-local rotationSpeed = _G.math.rad(45)
-local rotate = false
-local wasRotating = false
 
 local sel = selection.new()
 
@@ -56,13 +50,6 @@ function love.load()
     cursorIcon = cursor.load("assets/icon.png", 8)
 end
 
-function love.update(dt)
-    if rotate then
-        rotation = rotation + rotationSpeed * dt
-        model = mat4.rotate_y(rotation)
-    end
-end
-
 local function windowToCanvas(x, y)
     local windowWidth, windowHeight = love.graphics.getDimensions()
     local ox, oy, s = math.fit_rect(canvasWidth, canvasHeigh, windowWidth, windowHeight)
@@ -77,7 +64,7 @@ local function drawCursor()
     local mx, my = love.mouse.getPosition()
     local cx, cy = windowToCanvas(mx, my)
     local vp = viewportAt(cx, cy)
-    local hovering = selection.is_near_selected(sel, vp, meshes[currentIndex].vertices, model, cx, cy,
+    local hovering = selection.is_near_selected(sel, vp, meshes[currentIndex].vertices, cx, cy,
         selectionMarkerRadius)
     cursor.draw(cursorIcon, cx, cy, sel.dragging or sel.moving, hovering)
 end
@@ -89,10 +76,7 @@ function love.mousepressed(x, y, button)
     local cx, cy = windowToCanvas(x, y)
     local vp = viewportAt(cx, cy)
 
-    wasRotating = rotate
-    rotate = false
-
-    local hovering = selection.is_near_selected(sel, vp, meshes[currentIndex].vertices, model, cx, cy,
+    local hovering = selection.is_near_selected(sel, vp, meshes[currentIndex].vertices, cx, cy,
         selectionMarkerRadius)
     if hovering then
         selection.begin_move(sel, vp, meshes[currentIndex].vertices, cx, cy)
@@ -104,7 +88,7 @@ end
 function love.mousemoved(x, y)
     local cx, cy = windowToCanvas(x, y)
     if sel.moving then
-        selection.update_move(sel, meshes[currentIndex].vertices, model, cx, cy)
+        selection.update_move(sel, meshes[currentIndex].vertices, cx, cy)
     elseif sel.dragging then
         selection.update_drag(sel, cx, cy)
     end
@@ -117,9 +101,8 @@ function love.mousereleased(x, y, button)
     if sel.moving then
         selection.end_move(sel)
     else
-        selection.end_drag(sel, meshes[currentIndex].vertices, model)
+        selection.end_drag(sel, meshes[currentIndex].vertices)
     end
-    rotate = wasRotating
 end
 
 function love.keypressed(key, u)
@@ -140,19 +123,16 @@ function love.keypressed(key, u)
     if key == "up" then
         currentView = (currentView - 2) % #views + 1
     end
-    if key == "space" then
-        rotate = not rotate
-    end
 end
 
 function love.draw()
     love.graphics.setCanvas(screenCanvas)
     love.graphics.clear(colors.DarkGray)
     local v = views[currentView]
-    v:draw(meshes[currentIndex], model, canvasWidth, canvasHeigh, love.graphics.setColor, love.graphics.line)
+    v:draw(meshes[currentIndex], canvasWidth, canvasHeigh, love.graphics.setColor, love.graphics.line)
 
     love.graphics.setColor(colors.Yellow)
-    v:draw_selected(meshes[currentIndex], sel.selected, model, canvasWidth, canvasHeigh,
+    v:draw_selected(meshes[currentIndex], sel.selected, canvasWidth, canvasHeigh,
         function(x, y) love.graphics.circle("line", x, y, selectionMarkerRadius) end)
     selection.draw(sel, love.graphics.line)
     love.graphics.setColor(colors.RealWhite)
