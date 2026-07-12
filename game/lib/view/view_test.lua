@@ -23,6 +23,15 @@ test("new() stores name, view and projection", function()
     eq(v.projection, projection)
 end)
 
+test("new() leaves move_delta unset unless a view type supplies one", function()
+    local a = view.new("test", mat4.identity(), mat4.identity())
+    local supplied = function() end
+    local b = view.new("test", mat4.identity(), mat4.identity(), supplied)
+
+    eq(a.move_delta, nil)
+    eq(b.move_delta, supplied)
+end)
+
 test("mvp() composes projection * view * model", function()
     local v = view.new("test", mat4.translate(1, 0, 0), mat4.scale(2))
 

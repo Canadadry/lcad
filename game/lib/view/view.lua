@@ -30,11 +30,12 @@ function M.viewport_at(v, cx, cy, w, h)
     return { view = v, ox = 0, oy = 0, w = w, h = h }
 end
 
-function M.new(name, view, projection)
+function M.new(name, view, projection, move_delta)
     return {
         name = name,
         view = view,
         projection = projection,
+        move_delta = move_delta,
         mvp = M.mvp,
         draw = M.draw,
         draw_selected = M.draw_selected,

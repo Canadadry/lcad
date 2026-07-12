@@ -109,6 +109,33 @@ test("look_at transforms the target point to -distance on the Z axis", function(
     eq(r[4], 1)
 end)
 
+test("transpose swaps each (col, row) element with its (row, col) counterpart", function()
+    local m = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }
+    local t = mat4.transpose(m)
+
+    -- diagonal stays put
+    eq(t[1], 1); eq(t[6], 6); eq(t[11], 11); eq(t[16], 16)
+    -- off-diagonal pairs swap
+    eq(t[2], m[5], "col0 row1 <- original col1 row0")
+    eq(t[5], m[2], "col1 row0 <- original col0 row1")
+    eq(t[3], m[9], "col0 row2 <- original col2 row0")
+    eq(t[9], m[3], "col2 row0 <- original col0 row2")
+    eq(t[8], m[14], "col1 row3 <- original col3 row1")
+    eq(t[14], m[8], "col3 row1 <- original col1 row3")
+end)
+
+test("transpose of a rotation matrix is its inverse", function()
+    local m = mat4.rotate_y(math.rad(50))
+    local product = mat4.mul(mat4.transpose(m), m)
+
+    for col = 0, 3 do
+        for row = 0, 3 do
+            local expected = (col == row) and 1 or 0
+            eq(approx(product[col * 4 + row + 1], expected), true, "col " .. col .. " row " .. row)
+        end
+    end
+end)
+
 test("perspective produces expected matrix elements for a 90deg fov", function()
     local m = mat4.perspective(math.rad(90), 1, 1, 101)
     eq(approx(m[1], 1), true, "col0 row0 = 1/(aspect*tan(45))")

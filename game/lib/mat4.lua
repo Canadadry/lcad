@@ -117,6 +117,16 @@ function M.orthographic(left, right, bottom, top, near, far)
     }
 end
 
+function M.transpose(m)
+    local r = {}
+    for col = 0, 3 do
+        for row = 0, 3 do
+            r[row * 4 + col + 1] = m[col * 4 + row + 1]
+        end
+    end
+    return r
+end
+
 function M.project(mvp, vertex, w, h)
     local clip = M.mul_vec4(mvp, { vertex[1], vertex[2], vertex[3], 1 })
     local ndc_x, ndc_y = clip[1] / clip[4], clip[2] / clip[4]

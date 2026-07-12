@@ -9,6 +9,10 @@ local function view_with_mvp(mvp)
     return { mvp = function(_, model) return mvp end }
 end
 
+local function approx(a, b, eps)
+    return math.abs(a - b) < (eps or 1e-9)
+end
+
 test("new() starts idle with nothing selected", function()
     local sel = selection.new()
 
@@ -207,6 +211,72 @@ test("is_near_selected() offsets the point by the viewport's screen offset befor
     sel.selected = { 1 }
 
     eq(selection.is_near_selected(sel, vp, vertices, nil, 227, 150, 3), true)
+end)
+
+test("begin_move() marks the selection as moving and snapshots the selected vertices' positions", function()
+    local sel = selection.new()
+    local vp = { ox = 0, oy = 0, view = {} }
+    local vertices = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } }
+    sel.selected = { 1, 3 }
+
+    selection.begin_move(sel, vp, vertices, 10, 20)
+
+    eq(sel.moving, true)
+    eq(sel.move_origin[1][1], 1); eq(sel.move_origin[1][2], 2); eq(sel.move_origin[1][3], 3)
+    eq(sel.move_origin[3][1], 7); eq(sel.move_origin[3][2], 8); eq(sel.move_origin[3][3], 9)
+end)
+
+test("update_move() calls the view's move_delta with the screen delta since the move started, and applies the returned delta to every selected vertex from its snapshot", function()
+    local sel = selection.new()
+    local calls = {}
+    local view = {
+        move_delta = function(v, model, w, h, dsx, dsy)
+            calls[#calls + 1] = { model = model, w = w, h = h, dsx = dsx, dsy = dsy }
+            return { 1, -2, 3 }
+        end,
+    }
+    local vp = { ox = 0, oy = 0, w = 100, h = 100, view = view }
+    local vertices = { { 0, 0, 0 }, { 5, 5, 5 } }
+    sel.selected = { 1, 2 }
+    local model = mat4.identity()
+
+    selection.begin_move(sel, vp, vertices, 10, 10)
+    selection.update_move(sel, vertices, model, 60, 30)
+
+    eq(#calls, 1)
+    eq(calls[1].model, model)
+    eq(calls[1].w, 100)
+    eq(calls[1].h, 100)
+    eq(calls[1].dsx, 50)
+    eq(calls[1].dsy, 20)
+
+    eq(vertices[1][1], 1); eq(vertices[1][2], -2); eq(vertices[1][3], 3)
+    eq(vertices[2][1], 6); eq(vertices[2][2], 3); eq(vertices[2][3], 8)
+end)
+
+test("update_move() is a no-op when the view has no move_delta (e.g. a perspective view)", function()
+    local sel = selection.new()
+    local vp = { ox = 0, oy = 0, w = 100, h = 100, view = {} }
+    local vertices = { { 1, 2, 3 } }
+    sel.selected = { 1 }
+    local model = mat4.identity()
+
+    selection.begin_move(sel, vp, vertices, 10, 10)
+    selection.update_move(sel, vertices, model, 60, 30)
+
+    eq(vertices[1][1], 1); eq(vertices[1][2], 2); eq(vertices[1][3], 3)
+end)
+
+test("end_move() stops moving", function()
+    local sel = selection.new()
+    local vp = { ox = 0, oy = 0, view = {} }
+    local vertices = { { 1, 2, 3 } }
+    sel.selected = { 1 }
+
+    selection.begin_move(sel, vp, vertices, 10, 20)
+    selection.end_move(sel)
+
+    eq(sel.moving, false)
 end)
 
 T.report()

@@ -27,6 +27,7 @@ local model = mat4.identity()
 local rotation = 0
 local rotationSpeed = _G.math.rad(45)
 local rotate = false
+local wasRotating = false
 
 local sel = selection.new()
 
@@ -78,7 +79,7 @@ local function drawCursor()
     local vp = viewportAt(cx, cy)
     local hovering = selection.is_near_selected(sel, vp, meshes[currentIndex].vertices, model, cx, cy,
         selectionMarkerRadius)
-    cursor.draw(cursorIcon, cx, cy, sel.dragging, hovering)
+    cursor.draw(cursorIcon, cx, cy, sel.dragging or sel.moving, hovering)
 end
 
 function love.mousepressed(x, y, button)
@@ -87,22 +88,38 @@ function love.mousepressed(x, y, button)
     end
     local cx, cy = windowToCanvas(x, y)
     local vp = viewportAt(cx, cy)
-    selection.begin_drag(sel, vp, cx, cy)
+
+    wasRotating = rotate
+    rotate = false
+
+    local hovering = selection.is_near_selected(sel, vp, meshes[currentIndex].vertices, model, cx, cy,
+        selectionMarkerRadius)
+    if hovering then
+        selection.begin_move(sel, vp, meshes[currentIndex].vertices, cx, cy)
+    else
+        selection.begin_drag(sel, vp, cx, cy)
+    end
 end
 
 function love.mousemoved(x, y)
-    if not sel.dragging then
-        return
-    end
     local cx, cy = windowToCanvas(x, y)
-    selection.update_drag(sel, cx, cy)
+    if sel.moving then
+        selection.update_move(sel, meshes[currentIndex].vertices, model, cx, cy)
+    elseif sel.dragging then
+        selection.update_drag(sel, cx, cy)
+    end
 end
 
 function love.mousereleased(x, y, button)
-    if button ~= 1 or not sel.dragging then
+    if button ~= 1 or not (sel.dragging or sel.moving) then
         return
     end
-    selection.end_drag(sel, meshes[currentIndex].vertices, model)
+    if sel.moving then
+        selection.end_move(sel)
+    else
+        selection.end_drag(sel, meshes[currentIndex].vertices, model)
+    end
+    rotate = wasRotating
 end
 
 function love.keypressed(key, u)

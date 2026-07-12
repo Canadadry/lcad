@@ -5,6 +5,7 @@ local M = {}
 function M.new()
     return {
         dragging = false,
+        moving = false,
         selected = {},
     }
 end
@@ -53,6 +54,40 @@ function M.end_drag(sel, vertices, model)
 
     sel.dragging = false
     sel.selected = selected
+end
+
+function M.begin_move(sel, vp, vertices, cx, cy)
+    sel.moving = true
+    sel.viewport = vp
+    sel.move_start = { x = cx - vp.ox, y = cy - vp.oy }
+    sel.move_origin = {}
+    for _, i in ipairs(sel.selected) do
+        local v = vertices[i]
+        sel.move_origin[i] = { v[1], v[2], v[3] }
+    end
+end
+
+function M.update_move(sel, vertices, model, cx, cy)
+    local vp = sel.viewport
+    if not vp.view.move_delta then
+        return
+    end
+
+    local x, y = cx - vp.ox, cy - vp.oy
+    local dsx, dsy = x - sel.move_start.x, y - sel.move_start.y
+    local d = vp.view:move_delta(model, vp.w, vp.h, dsx, dsy)
+
+    for _, i in ipairs(sel.selected) do
+        local origin = sel.move_origin[i]
+        local v = vertices[i]
+        v[1] = origin[1] + d[1]
+        v[2] = origin[2] + d[2]
+        v[3] = origin[3] + d[3]
+    end
+end
+
+function M.end_move(sel)
+    sel.moving = false
 end
 
 function M.is_near_selected(sel, vp, vertices, model, cx, cy, radius)
