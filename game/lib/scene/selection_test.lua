@@ -1,5 +1,5 @@
 local selection = require("lib.scene.selection")
-local mat4 = require("lib.mat4")
+local mat4 = require("lib.math.mat4")
 
 local T    = require("lib.t")
 local test = T.test

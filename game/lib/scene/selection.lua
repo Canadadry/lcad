@@ -1,5 +1,5 @@
-local vec3 = require("lib.vec3")
-local mat4 = require("lib.mat4")
+local vec3 = require("lib.math.vec3")
+local mat4 = require("lib.math.mat4")
 
 local M = {}
 

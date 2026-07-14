@@ -1,4 +1,4 @@
-local math = require("lib.math")
+local rect = require("lib.math.rect")
 local colors = require("lib.colors")
 local const = require("const")
 local screen_manager = require("lib.screen_manager")
@@ -26,7 +26,7 @@ end
 
 local function windowToCanvas(x, y)
     local windowWidth, windowHeight = love.graphics.getDimensions()
-    local ox, oy, s = math.fit_rect(const.canvasWidth, const.canvasHeight, windowWidth, windowHeight)
+    local ox, oy, s = rect.fit_rect(const.canvasWidth, const.canvasHeight, windowWidth, windowHeight)
     return (x - ox) / s, (y - oy) / s
 end
 
@@ -53,6 +53,6 @@ function love.draw()
     love.graphics.setCanvas()
     love.graphics.clear(colors.Black)
     local windowWidth, windowHeight = love.graphics.getDimensions()
-    local x, y, s = math.fit_rect(const.canvasWidth, const.canvasHeight, windowWidth, windowHeight)
+    local x, y, s = rect.fit_rect(const.canvasWidth, const.canvasHeight, windowWidth, windowHeight)
     love.graphics.draw(screenCanvas, x, y, 0, s, s)
 end

@@ -1,6 +1,6 @@
 local wireframe = require("lib.render.wireframe")
 local mesh = require("lib.scene.mesh")
-local mat4 = require("lib.mat4")
+local mat4 = require("lib.math.mat4")
 local colors = require("lib.colors")
 
 local T    = require("lib.t")

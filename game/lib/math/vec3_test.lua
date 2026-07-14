@@ -1,4 +1,4 @@
-local vec3 = require("lib.vec3")
+local vec3 = require("lib.math.vec3")
 
 local T    = require("lib.t")
 local test = T.test

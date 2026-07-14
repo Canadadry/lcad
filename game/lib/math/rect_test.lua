@@ -1,4 +1,4 @@
-local rectmath = require("lib.math")
+local rectmath = require("lib.math.rect")
 
 local T    = require("lib.t")
 local test = T.test

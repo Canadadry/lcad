@@ -1,4 +1,4 @@
-local cursor = require("lib.cursor")
+local cursor = require("lib.hud.cursor")
 
 local T    = require("lib.t")
 local test = T.test

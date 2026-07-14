@@ -1,11 +1,9 @@
 local const = require("const")
 local colors = require("lib.colors")
-local cursor = require("lib.cursor")
-local mat4 = require("lib.mat4")
+local cursor = require("lib.hud.cursor")
+local mat4 = require("lib.math.mat4")
 local obj_import = require("lib.scene.obj_import")
 local selection = require("lib.scene.selection")
-local ortho = require("lib.view.ortho")
-local perspective = require("lib.view.perspective")
 local wireframe = require("lib.render.wireframe")
 local gizmo = require("lib.hud.gizmo")
 local hud_selection = require("lib.hud.selection")
@@ -25,15 +23,27 @@ local cursorIcon
 
 local sel = selection.new()
 
-local views = {}
-for i, factory in ipairs({
-    ortho.x,
-    ortho.y,
-    ortho.z,
-    perspective,
-}) do
-    views[i] = factory(const.canvasWidth, const.canvasHeight)
+local orthoSize = 3
+local aspect = const.canvasWidth / const.canvasHeight
+
+local function orthoView(name, eye, up)
+    return {
+        name = name,
+        view = mat4.look_at(eye, { 0, 0, 0 }, up),
+        projection = mat4.orthographic(-orthoSize * aspect, orthoSize * aspect, -orthoSize, orthoSize, 0.1, 100),
+    }
 end
+
+local views = {
+    orthoView("ortho_x", { 5, 0, 0 }, { 0, 1, 0 }),
+    orthoView("ortho_y", { 0, 5, 0 }, { 0, 0, -1 }),
+    orthoView("ortho_z", { 0, 0, 5 }, { 0, 1, 0 }),
+    {
+        name = "perspective",
+        view = mat4.look_at({ 3, 2, 4 }, { 0, 0, 0 }, { 0, 1, 0 }),
+        projection = mat4.perspective(math.rad(60), aspect, 0.1, 100),
+    },
+}
 
 local quadrantOffsets = {
     { ox = 0, oy = 0 },
@@ -127,7 +137,7 @@ local function drawViewport(v, w, h)
     local mvp = mat4.mul(v.projection, v.view)
     wireframe.draw(meshes[currentIndex], mvp, w, h, colors.RealWhite)
     gizmo.draw(mvp, w, h)
-    hud_selection.draw_selected(meshes[currentIndex], sel.selected, mvp, w, h, selectionMarkerRadius, colors.Yellow)
+    hud_selection.draw(v, meshes[currentIndex], sel, mvp, w, h, selectionMarkerRadius, colors.Yellow)
 end
 
 function M:draw(cx, cy)
@@ -144,7 +154,6 @@ function M:draw(cx, cy)
     love.graphics.line(hw, 0, hw, const.canvasHeight)
     love.graphics.line(0, hh, const.canvasWidth, hh)
 
-    hud_selection.draw(sel)
     drawCursor(cx, cy)
 end
 
