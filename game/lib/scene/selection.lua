@@ -1,4 +1,5 @@
 local vec3 = require("lib.vec3")
+local mat4 = require("lib.mat4")
 
 local M = {}
 
@@ -45,7 +46,7 @@ function M.end_drag(sel, vertices)
 
     local selected = {}
     for i, vertex in ipairs(vertices) do
-        local x, y = vp.view:world_to_screen(vertex, vp.w, vp.h)
+        local x, y = mat4.world_to_screen(vp.view.view, vp.view.projection, vertex, vp.w, vp.h)
         if x >= minX and x <= maxX and y >= minY and y <= maxY then
             selected[#selected + 1] = i
         end
@@ -64,13 +65,13 @@ function M.begin_move(sel, vp, vertices, cx, cy)
         local v = vertices[i]
         sel.move_origin[j] = { v[1], v[2], v[3] }
     end
-    sel.move_depth = vp.view:depth_of(vec3.barycenter(sel.move_origin))
+    sel.move_depth = mat4.depth_of(vp.view.view, vec3.barycenter(sel.move_origin))
 end
 
 function M.update_move(sel, vertices, cx, cy)
     local vp = sel.viewport
-    local x1, y1, z1 = vp.view:screen_to_world(sel.move_start.x, sel.move_start.y, sel.move_depth, vp.w, vp.h)
-    local x2, y2, z2 = vp.view:screen_to_world(cx, cy, sel.move_depth, vp.w, vp.h)
+    local x1, y1, z1 = mat4.screen_to_world(vp.view.view, vp.view.projection, sel.move_start.x, sel.move_start.y, sel.move_depth, vp.w, vp.h)
+    local x2, y2, z2 = mat4.screen_to_world(vp.view.view, vp.view.projection, cx, cy, sel.move_depth, vp.w, vp.h)
     local d = vec3.sub({ x2, y2, z2 }, { x1, y1, z1 })
 
     for j, i in ipairs(sel.selected) do
@@ -89,27 +90,13 @@ end
 function M.is_near_selected(sel, vp, vertices, cx, cy, radius)
     local x, y = cx - vp.ox, cy - vp.oy
     for _, i in ipairs(sel.selected) do
-        local vx, vy = vp.view:world_to_screen(vertices[i], vp.w, vp.h)
+        local vx, vy = mat4.world_to_screen(vp.view.view, vp.view.projection, vertices[i], vp.w, vp.h)
         local dx, dy = vx - x, vy - y
         if dx * dx + dy * dy <= radius * radius then
             return true
         end
     end
     return false
-end
-
-function M.draw(sel, drawLine)
-    if not sel.dragging then
-        return
-    end
-
-    local ox, oy = sel.viewport.ox, sel.viewport.oy
-    local sx, sy = sel.start.x + ox, sel.start.y + oy
-    local cx, cy = sel.current.x + ox, sel.current.y + oy
-    drawLine(sx, sy, cx, sy)
-    drawLine(cx, sy, cx, cy)
-    drawLine(cx, cy, sx, cy)
-    drawLine(sx, cy, sx, sy)
 end
 
 return M

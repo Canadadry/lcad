@@ -1,11 +1,14 @@
 local const = require("const")
 local colors = require("lib.colors")
 local cursor = require("lib.cursor")
+local mat4 = require("lib.mat4")
 local obj_import = require("lib.scene.obj_import")
 local selection = require("lib.scene.selection")
 local ortho = require("lib.view.ortho")
-local four_view = require("lib.view.four_view")
 local perspective = require("lib.view.perspective")
+local wireframe = require("lib.render.wireframe")
+local gizmo = require("lib.hud.gizmo")
+local hud_selection = require("lib.hud.selection")
 
 local assetPaths = {
     "assets/cube.obj",
@@ -31,8 +34,33 @@ for i, factory in ipairs({
 }) do
     views[i] = factory(const.canvasWidth, const.canvasHeight)
 end
-views[#views + 1] = four_view.new(views[1], views[2], views[3], views[4])
-local currentView = #views
+
+local quadrantOffsets = {
+    { ox = 0, oy = 0 },
+    { ox = 1, oy = 0 },
+    { ox = 0, oy = 1 },
+    { ox = 1, oy = 1 },
+}
+
+local function quadrants(w, h)
+    local hw, hh = w / 2, h / 2
+    local qs = {}
+    for i, v in ipairs(views) do
+        local o = quadrantOffsets[i]
+        qs[i] = { view = v, ox = o.ox * hw, oy = o.oy * hh, w = hw, h = hh }
+    end
+    return qs
+end
+
+local function locate(x, y, w, h)
+    local hw, hh = w / 2, h / 2
+    local qx, qy = x < hw and 0 or 1, y < hh and 0 or 1
+    return quadrants(w, h)[1 + qx + 2 * qy]
+end
+
+local function viewportAt(cx, cy)
+    return locate(cx, cy, const.canvasWidth, const.canvasHeight)
+end
 
 local M = {}
 
@@ -41,10 +69,6 @@ function M:load()
         meshes[i] = obj_import.load(path)
     end
     cursorIcon = cursor.load("assets/icon.png", 8)
-end
-
-local function viewportAt(cx, cy)
-    return views[currentView]:viewport_at(cx, cy, const.canvasWidth, const.canvasHeight)
 end
 
 local function drawCursor(cx, cy)
@@ -97,24 +121,30 @@ function M:keypressed(key)
         currentIndex = (currentIndex - 2) % #meshes + 1
         sel = selection.new()
     end
-    if key == "down" then
-        currentView = currentView % #views + 1
-    end
-    if key == "up" then
-        currentView = (currentView - 2) % #views + 1
-    end
+end
+
+local function drawViewport(v, w, h)
+    local mvp = mat4.mul(v.projection, v.view)
+    wireframe.draw(meshes[currentIndex], mvp, w, h, colors.RealWhite)
+    gizmo.draw(mvp, w, h)
+    hud_selection.draw_selected(meshes[currentIndex], sel.selected, mvp, w, h, selectionMarkerRadius, colors.Yellow)
 end
 
 function M:draw(cx, cy)
     love.graphics.clear(colors.DarkGray)
-    local v = views[currentView]
-    v:draw(meshes[currentIndex], const.canvasWidth, const.canvasHeight, love.graphics.setColor, love.graphics.line)
 
-    love.graphics.setColor(colors.Yellow)
-    v:draw_selected(meshes[currentIndex], sel.selected, const.canvasWidth, const.canvasHeight,
-        function(x, y) love.graphics.circle("line", x, y, selectionMarkerRadius) end)
-    selection.draw(sel, love.graphics.line)
+    for _, q in ipairs(quadrants(const.canvasWidth, const.canvasHeight)) do
+        love.graphics.push()
+        love.graphics.translate(q.ox, q.oy)
+        drawViewport(q.view, q.w, q.h)
+        love.graphics.pop()
+    end
     love.graphics.setColor(colors.RealWhite)
+    local hw, hh = const.canvasWidth / 2, const.canvasHeight / 2
+    love.graphics.line(hw, 0, hw, const.canvasHeight)
+    love.graphics.line(0, hh, const.canvasWidth, hh)
+
+    hud_selection.draw(sel)
     drawCursor(cx, cy)
 end
 

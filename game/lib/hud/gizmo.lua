@@ -9,13 +9,14 @@ local axes = {
     { dir = { 0, 0, 1 }, color = colors.Blue },
 }
 
-function M.draw(mvp, w, h, drawLine, length)
+function M.draw(mvp, w, h, length)
     length = length or 1
     local ox, oy = mat4.project(mvp, { 0, 0, 0 }, w, h)
     for _, axis in ipairs(axes) do
         local tip = { axis.dir[1] * length, axis.dir[2] * length, axis.dir[3] * length }
         local ex, ey = mat4.project(mvp, tip, w, h)
-        drawLine(ox, oy, ex, ey, axis.color)
+        love.graphics.setColor(axis.color)
+        love.graphics.line(ox, oy, ex, ey)
     end
 end
 

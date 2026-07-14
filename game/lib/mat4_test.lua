@@ -250,4 +250,55 @@ test("unproject() ignores depth for an orthographic projection", function()
     eq(approx(ny, fy), true, "y")
 end)
 
+test("depth_of() returns the view-space z of a point", function()
+    local z = mat4.depth_of(mat4.translate(0, 0, -5), { 0, 0, 0 })
+
+    eq(z, -5)
+end)
+
+test("world_to_screen() projects a point through the composed view and projection matrices", function()
+    local x, y = mat4.world_to_screen(mat4.identity(), mat4.identity(), { 0.5, 0, 0 }, 100, 100)
+
+    eq(x, 75); eq(y, 50)
+end)
+
+test("screen_to_world() is the inverse of world_to_screen(): a point's own screen position and depth convert back to itself, for an orthographic projection", function()
+    local view = mat4.identity()
+    local proj = mat4.orthographic(-1, 1, -1, 1, 0.1, 100)
+    local point = { 0.3, -0.2, 0.1 }
+
+    local sx, sy = mat4.world_to_screen(view, proj, point, 100, 100)
+    local depth = mat4.depth_of(view, point)
+    local x, y, z = mat4.screen_to_world(view, proj, sx, sy, depth, 100, 100)
+
+    eq(approx(x, point[1]), true, "x")
+    eq(approx(y, point[2]), true, "y")
+    eq(approx(z, point[3]), true, "z")
+end)
+
+test("screen_to_world() is the inverse of world_to_screen(), for a perspective projection with a rotated and translated camera", function()
+    local view = mat4.look_at({ 3, 2, 4 }, { 0, 0, 0 }, { 0, 1, 0 })
+    local proj = mat4.perspective(math.rad(60), 1, 0.1, 100)
+    local point = { 0.3, -0.2, 0.1 }
+
+    local sx, sy = mat4.world_to_screen(view, proj, point, 100, 100)
+    local depth = mat4.depth_of(view, point)
+    local x, y, z = mat4.screen_to_world(view, proj, sx, sy, depth, 100, 100)
+
+    eq(approx(x, point[1]), true, "x")
+    eq(approx(y, point[2]), true, "y")
+    eq(approx(z, point[3]), true, "z")
+end)
+
+test("screen_to_world() ignores depth for an orthographic projection", function()
+    local view = mat4.identity()
+    local proj = mat4.orthographic(-1, 1, -1, 1, 0.1, 100)
+
+    local nx, ny = mat4.screen_to_world(view, proj, 60, 40, 1, 100, 100)
+    local fx, fy = mat4.screen_to_world(view, proj, 60, 40, 999, 100, 100)
+
+    eq(approx(nx, fx), true, "x")
+    eq(approx(ny, fy), true, "y")
+end)
+
 T.report()

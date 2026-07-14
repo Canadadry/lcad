@@ -2,11 +2,11 @@ local math = require("lib.math")
 local colors = require("lib.colors")
 local const = require("const")
 local screen_manager = require("lib.screen_manager")
-local editor = require("screen.editor")
+local mesh = require("screen.mesh")
 
 local screenCanvas
 local manager = screen_manager.new()
-manager:enter(editor)
+manager:enter(mesh)
 
 function love.load()
     love.graphics.setDefaultFilter("nearest", "nearest")

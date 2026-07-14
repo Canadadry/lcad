@@ -1,16 +1,15 @@
 local mat4 = require("lib.mat4")
-local view = require("lib.view.view")
 
 local orthoSize = 3
 
 local function make(name, eye, up)
     return function(w, h)
         local aspect = w / h
-        return view.new(
-            name,
-            mat4.look_at(eye, { 0, 0, 0 }, up),
-            mat4.orthographic(-orthoSize * aspect, orthoSize * aspect, -orthoSize, orthoSize, 0.1, 100)
-        )
+        return {
+            name = name,
+            view = mat4.look_at(eye, { 0, 0, 0 }, up),
+            projection = mat4.orthographic(-orthoSize * aspect, orthoSize * aspect, -orthoSize, orthoSize, 0.1, 100),
+        }
     end
 end
 

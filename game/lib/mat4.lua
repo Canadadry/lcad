@@ -169,6 +169,20 @@ function M.invert(m)
     return r
 end
 
+function M.depth_of(view, point)
+    return M.mul_vec4(view, { point[1], point[2], point[3], 1 })[3]
+end
+
+function M.world_to_screen(view, projection, point, w, h)
+    return M.project(M.mul(projection, view), point, w, h)
+end
+
+function M.screen_to_world(view, projection, sx, sy, depth, w, h)
+    local view_x, view_y = M.unproject(projection, sx, sy, depth, w, h)
+    local p = M.mul_vec4(M.invert(view), { view_x, view_y, depth, 1 })
+    return p[1], p[2], p[3]
+end
+
 function M.project(mvp, vertex, w, h)
     local clip = M.mul_vec4(mvp, { vertex[1], vertex[2], vertex[3], 1 })
     local ndc_x, ndc_y = clip[1] / clip[4], clip[2] / clip[4]
