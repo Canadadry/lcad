@@ -12,5 +12,29 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Bash(make test *)",
+      "Bash(make csv2png)",
+      "Bash(make menubaricons)",
+      "Bash(mkdir *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git mv *)",
+      "Bash(git rm *)",
+      "Bash(make test-all *)",
+      "Bash(.claude/skills/git-commit/scripts/status.sh)",
+      "Bash(.claude/skills/git-commit/scripts/unstaged-diff.sh *)",
+      "Bash(git status *)",
+      "Bash(git pull *)",
+      "Bash(lua *)",
+      "Bash(xargs ls)"
+    ],
+    "defaultMode": "dontAsk"
   }
 }
