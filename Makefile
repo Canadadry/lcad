@@ -14,3 +14,6 @@ test:
 csv2png:
 	$(LOVE) tools/csv2png tools/csv2png/icon.csv game/assets/icon.png FFFFFF 1
 
+reset:
+	git reset --hard HEAD
+	git clean -fd
